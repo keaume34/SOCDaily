@@ -1,0 +1,44 @@
+{
+  "@@locale": "en",
+  "appName": "SOCDaily",
+  "@appName": {"description": "App display name"},
+
+  "navHome": "Home",
+  "navBrowse": "Browse",
+  "navStudy": "Study",
+  "navStats": "Stats",
+  "navSettings": "Settings",
+
+  "homeGreeting": "Welcome back",
+  "homeStreak": "{count}-day streak",
+  "@homeStreak": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "homeDueToday": "{count} due today",
+  "@homeDueToday": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "homeStartSession": "Start a study session",
+  "homeStartSessionSubtitle": "Cards scheduled for today.",
+  "homeDailyChallenge": "Daily challenge",
+  "homeDailyChallengeSubtitle": "A fresh set every day, same for everyone.",
+  "homeBrowse": "Browse all material",
+  "homeBrowseSubtitle": "Pick any subject, chapter, or topic.",
+
+  "placeholderComingSoon": "Coming in a later phase.",
+
+  "settingsAppearance": "Appearance",
+  "settingsLanguage": "Language",
+  "settingsAbout": "About",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "settingsThemeSystem": "Follow system",
+  "settingsAccent": "Accent",
+  "settingsAccentSubtitle": "Pairs with monochrome surfaces for a clean, professional look.",
+  "settingsLanguageSystem": "Follow system",
+  "settingsAboutTagline": "Build a SOC-analyst learning database from your own source PDFs, then study it like an Anki deck on steroids.",
+  "settingsAboutVersion": "Version {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {"version": {"type": "String"}}
+  }
+}
