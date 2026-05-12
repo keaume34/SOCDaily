@@ -124,6 +124,94 @@ class UserStateRepository {
       total: total.read(_db.flashcards.id.count()) ?? 0,
     );
   }
+
+  // ---- Bookmarks --------------------------------------------------------
+
+  Future<bool> isBookmarked(String kind, int id) async {
+    final row = await (_db.select(_db.userBookmarks)
+          ..where((b) =>
+              b.itemKind.equals(kind) & b.itemId.equals(id)))
+        .getSingleOrNull();
+    return row != null;
+  }
+
+  Future<bool> toggleBookmark(String kind, int id, {DateTime? now}) async {
+    final exists = await isBookmarked(kind, id);
+    if (exists) {
+      await (_db.delete(_db.userBookmarks)
+            ..where((b) =>
+                b.itemKind.equals(kind) & b.itemId.equals(id)))
+          .go();
+      return false;
+    }
+    await _db.into(_db.userBookmarks).insert(
+          UserBookmarksCompanion.insert(
+            itemKind: kind,
+            itemId: id,
+            createdAt: Value(now ?? DateTime.now()),
+          ),
+        );
+    return true;
+  }
+
+  Future<List<UserBookmark>> listBookmarks({String? kind, int limit = 200}) {
+    final q = _db.select(_db.userBookmarks)
+      ..orderBy([(b) => OrderingTerm.desc(b.createdAt)])
+      ..limit(limit);
+    if (kind != null) {
+      q.where((b) => b.itemKind.equals(kind));
+    }
+    return q.get();
+  }
+
+  // ---- Notes ------------------------------------------------------------
+
+  Future<List<UserNote>> listNotesForItem(String kind, int id) {
+    return (_db.select(_db.userNotes)
+          ..where((n) =>
+              n.itemKind.equals(kind) & n.itemId.equals(id))
+          ..orderBy([(n) => OrderingTerm.desc(n.createdAt)]))
+        .get();
+  }
+
+  Future<int> addNote(String kind, int id, String body) {
+    final now = DateTime.now();
+    return _db.into(_db.userNotes).insert(
+          UserNotesCompanion.insert(
+            itemKind: kind,
+            itemId: id,
+            body: body,
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+  }
+
+  Future<int> deleteNote(int noteId) =>
+      (_db.delete(_db.userNotes)..where((n) => n.id.equals(noteId))).go();
+
+  // ---- Search (LIKE-based) ---------------------------------------------
+
+  Future<List<Flashcard>> searchFlashcards(String query,
+      {int limit = 30}) async {
+    final like = '%${query.toLowerCase()}%';
+    return (_db.select(_db.flashcards)
+          ..where((f) =>
+              f.front.lower().like(like) | f.back.lower().like(like))
+          ..limit(limit))
+        .get();
+  }
+
+  Future<List<Question>> searchQuestions(String query,
+      {int limit = 30}) async {
+    final like = '%${query.toLowerCase()}%';
+    return (_db.select(_db.questions)
+          ..where((q) =>
+              q.stem.lower().like(like) |
+              q.explanation.lower().like(like))
+          ..limit(limit))
+        .get();
+  }
 }
 
 class DueCounts {
@@ -148,4 +236,42 @@ final dueCountsProvider = FutureProvider.autoDispose<DueCounts>((ref) async {
 final dueFlashcardsProvider =
     FutureProvider.autoDispose<List<Flashcard>>((ref) async {
   return ref.watch(userStateRepositoryProvider).dueFlashcards();
+});
+
+final bookmarksProvider =
+    FutureProvider.autoDispose<List<UserBookmark>>((ref) async {
+  return ref.watch(userStateRepositoryProvider).listBookmarks();
+});
+
+final isBookmarkedProvider = FutureProvider.autoDispose
+    .family<bool, ({String kind, int id})>((ref, key) async {
+  return ref
+      .watch(userStateRepositoryProvider)
+      .isBookmarked(key.kind, key.id);
+});
+
+final notesForItemProvider = FutureProvider.autoDispose
+    .family<List<UserNote>, ({String kind, int id})>((ref, key) async {
+  return ref
+      .watch(userStateRepositoryProvider)
+      .listNotesForItem(key.kind, key.id);
+});
+
+class SearchResults {
+  const SearchResults({required this.flashcards, required this.questions});
+  final List<Flashcard> flashcards;
+  final List<Question> questions;
+  bool get isEmpty => flashcards.isEmpty && questions.isEmpty;
+}
+
+final searchProvider = FutureProvider.autoDispose
+    .family<SearchResults, String>((ref, query) async {
+  final trimmed = query.trim();
+  if (trimmed.length < 2) {
+    return const SearchResults(flashcards: [], questions: []);
+  }
+  final repo = ref.watch(userStateRepositoryProvider);
+  final flashcards = await repo.searchFlashcards(trimmed);
+  final questions = await repo.searchQuestions(trimmed);
+  return SearchResults(flashcards: flashcards, questions: questions);
 });
