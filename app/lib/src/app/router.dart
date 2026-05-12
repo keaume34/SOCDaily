@@ -10,6 +10,7 @@ import '../features/home/home_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 import '../features/study/study_screen.dart';
+import '../features/study/topic_study_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/app_shell.dart';
 
@@ -17,6 +18,24 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/home',
     routes: [
+      GoRoute(
+        path: '/browse/subject/:id',
+        builder: (context, state) => SubjectDetailScreen(
+          subjectId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/browse/chapter/:id',
+        builder: (context, state) => ChapterDetailScreen(
+          chapterId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/study/topic/:id',
+        builder: (context, state) => TopicStudyScreen(
+          topicId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => AppShell(
           navigationShell: navigationShell,

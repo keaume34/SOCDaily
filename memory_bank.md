@@ -80,7 +80,7 @@ Conventions:
   - [x] Architecture doc `ARCHITECTURE.md`
   - [x] Phase-0 PR pushed to GitHub (#2)
 
-- **P1 — Theme + navigation shell + i18n + Settings** [~]
+- **P1 — Theme + navigation shell + i18n + Settings** [x]
   - [x] Custom Material 3 theme + monochrome gradient surfaces
   - [x] `AppAccent` enum with 6 presets (graphite/azure/violet/crimson/forest/amber)
   - [x] `GradientBackground` + `AccentChip` shared widgets
@@ -89,7 +89,16 @@ Conventions:
   - [x] Settings screen with theme picker + accent swatches + language picker
   - [x] i18n via Flutter ARB (en default + vi); l10n.yaml config
   - [x] Smoke widget test (`flutter test` + `flutter analyze` clean)
-- **P2 — Local SQLite (drift) + seed import + Browse** [ ]
+  - [x] PR #3 pushed
+
+- **P2 — Local SQLite (drift) + seed import + Browse** [~]
+  - [x] Drift schema mirroring `db/schema.sql` + user-state tables (`user_bookmarks`, `user_notes`, `user_sessions`, `user_streak`)
+  - [x] Generated `app_database.g.dart` via build_runner
+  - [x] `ContentRepository` + Riverpod providers (`subjectsProvider`, `chaptersProvider`, `topicsProvider`)
+  - [x] Bundled sample seed JSONs (4 topics covering SOC Fundamentals + Blue Team) at `app/assets/seed/`
+  - [x] `SeedImporter` (idempotent) + `seedBootstrapProvider`
+  - [x] Browse screen: Subject → Chapter → Topic list with counts; tapping topic opens placeholder study screen
+  - [x] 4 drift schema tests + smoke widget test still passing
 - **P3 — Flashcard flip + MCQ + explanation** [ ]
 - **P4 — SM-2 spaced repetition + Today queue** [ ]
 - **P5 — Bookmarks + per-card notes + FTS search** [ ]
