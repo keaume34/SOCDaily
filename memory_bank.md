@@ -91,7 +91,7 @@ Conventions:
   - [x] Smoke widget test (`flutter test` + `flutter analyze` clean)
   - [x] PR #3 pushed
 
-- **P2 — Local SQLite (drift) + seed import + Browse** [~]
+- **P2 — Local SQLite (drift) + seed import + Browse** [x]
   - [x] Drift schema mirroring `db/schema.sql` + user-state tables (`user_bookmarks`, `user_notes`, `user_sessions`, `user_streak`)
   - [x] Generated `app_database.g.dart` via build_runner
   - [x] `ContentRepository` + Riverpod providers (`subjectsProvider`, `chaptersProvider`, `topicsProvider`)
@@ -99,7 +99,15 @@ Conventions:
   - [x] `SeedImporter` (idempotent) + `seedBootstrapProvider`
   - [x] Browse screen: Subject → Chapter → Topic list with counts; tapping topic opens placeholder study screen
   - [x] 4 drift schema tests + smoke widget test still passing
-- **P3 — Flashcard flip + MCQ + explanation** [ ]
+  - [x] PR #4 pushed
+
+- **P3 — Flashcard flip + MCQ + explanation** [~]
+  - [x] `FlashcardView` widget: 3D Y-axis flip + tap-to-flip + swipe-to-next, optional hint surface, tag chips
+  - [x] `McqView` widget: single/multiple/T-F, pre-submit selection state, post-submit correctness coloring + explanation card
+  - [x] `StudySessionController` (AsyncNotifier family): loads all flashcards + MCQs for topic, walks index, tracks ratings + correctness, accuracy stat
+  - [x] `TopicStudyScreen` full Phase-3 player: progress bar, exit button, flashcard rating row (Again/Hard/Good/Easy), MCQ submit/next, "Session complete" summary
+  - [x] 4 session-controller tests against in-memory drift DB
+  - [x] All 9 tests pass
 - **P4 — SM-2 spaced repetition + Today queue** [ ]
 - **P5 — Bookmarks + per-card notes + FTS search** [ ]
 - **P6 — Stats / streak / heatmap** [ ]

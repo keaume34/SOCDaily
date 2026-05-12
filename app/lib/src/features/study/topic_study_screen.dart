@@ -1,13 +1,18 @@
-// Phase-2 placeholder: just shows topic title + counts. Phase 3 turns this
-// into the flashcard + MCQ player.
+// Real Phase-3 study player. Walks the user through the topic's flashcards
+// first (front → flip → grade) then the MCQs (select → submit → review).
+// Phase 4 will persist results to the user-state tables and feed SM-2.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../data/db/app_database.dart';
 import '../../data/db/content_repository.dart';
 import '../../theme/gradient_background.dart';
 import '../settings/settings_controller.dart';
+import 'study_session_controller.dart';
+import 'widgets/flashcard_view.dart';
+import 'widgets/mcq_view.dart';
 
 final _topicProvider = FutureProvider.family<Topic?, int>((ref, id) async {
   final db = ref.watch(appDatabaseProvider);
@@ -24,8 +29,7 @@ class TopicStudyScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsControllerProvider);
     final topic = ref.watch(_topicProvider(topicId));
-    final repo = ref.read(contentRepositoryProvider);
-    final theme = Theme.of(context);
+    final session = ref.watch(studySessionControllerProvider(topicId));
 
     return Scaffold(
       body: GradientBackground(
@@ -39,59 +43,15 @@ class TopicStudyScreen extends ConsumerWidget {
               if (t == null) {
                 return const Center(child: Text('Topic not found.'));
               }
-              return FutureBuilder<List<dynamic>>(
-                future: Future.wait([
-                  repo.listFlashcardsForTopic(t.id),
-                  repo.listQuestionsForTopic(t.id),
-                ]),
-                builder: (context, snap) {
-                  final cards =
-                      (snap.data?[0] as List<Flashcard>?) ?? const [];
-                  final questions =
-                      (snap.data?[1] as List<Question>?) ?? const [];
-                  return CustomScrollView(
-                    slivers: [
-                      SliverAppBar.medium(
-                        title: Text(t.title),
-                        pinned: true,
-                        backgroundColor: Colors.transparent,
-                      ),
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                        sliver: SliverList.list(
-                          children: [
-                            if (t.summary != null)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: Text(
-                                  t.summary!,
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                    color:
-                                        theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                            _CountTile(
-                              icon: Icons.style,
-                              title: 'Flashcards',
-                              count: cards.length,
-                              subtitle:
-                                  'Front/back review with SM-2 (Phase 3).',
-                            ),
-                            const SizedBox(height: 12),
-                            _CountTile(
-                              icon: Icons.quiz_outlined,
-                              title: 'Multiple-choice questions',
-                              count: questions.length,
-                              subtitle:
-                                  'Single/multi/T-F with explanations (Phase 3).',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
+              return session.when(
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (e, st) => Center(child: Text('$e')),
+                data: (s) => _SessionView(
+                  topic: t,
+                  state: s,
+                  topicId: topicId,
+                ),
               );
             },
           ),
@@ -101,61 +61,326 @@ class TopicStudyScreen extends ConsumerWidget {
   }
 }
 
-class _CountTile extends StatelessWidget {
-  const _CountTile({
-    required this.icon,
-    required this.title,
-    required this.count,
-    required this.subtitle,
+class _SessionView extends ConsumerWidget {
+  const _SessionView({
+    required this.topic,
+    required this.state,
+    required this.topicId,
   });
 
-  final IconData icon;
-  final String title;
-  final int count;
-  final String subtitle;
+  final Topic topic;
+  final StudySessionState state;
+  final int topicId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final controller =
+        ref.read(studySessionControllerProvider(topicId).notifier);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => context.pop(),
+                tooltip: 'Exit session',
+              ),
+              const Spacer(),
+              Text(
+                state.isDone
+                    ? 'Done'
+                    : '${state.index + 1} / ${state.items.length}',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 12),
+            ],
+          ),
+        ),
+        _ProgressBar(state: state),
+        Expanded(
+          child: state.isDone
+              ? _DoneView(state: state, onRestart: controller.restart)
+              : Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                  child: _CurrentItem(
+                    state: state,
+                    topicId: topicId,
+                    topic: topic,
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CurrentItem extends ConsumerWidget {
+  const _CurrentItem({
+    required this.state,
+    required this.topicId,
+    required this.topic,
+  });
+
+  final StudySessionState state;
+  final int topicId;
+  final Topic topic;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller =
+        ref.read(studySessionControllerProvider(topicId).notifier);
+    final item = state.current;
+    if (item == null) return const SizedBox.shrink();
+
+    if (item is FlashcardItem) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _StepBadge(text: 'FLASHCARD'),
+          const SizedBox(height: 12),
+          Expanded(
+            child: FlashcardView(
+              front: item.card.front,
+              back: item.card.back,
+              hint: item.card.hint,
+              onSwipeNext: controller.next,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _CardRatingBar(
+            onRate: controller.rateFlashcard,
+          ),
+        ],
+      );
+    }
+
+    final q = item as QuestionItem;
+    final isMultiple = q.question.qtype.toLowerCase() == 'multiple';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _StepBadge(text: 'QUESTION'),
+        const SizedBox(height: 12),
+        Expanded(
+          child: SingleChildScrollView(
+            child: McqView(
+              question: q.question,
+              options: q.options,
+              selected: state.selectedOptions,
+              submitted: state.submitted,
+              onToggle: (id) =>
+                  controller.toggleOption(id, multiple: isMultiple),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            if (state.submitted)
+              Expanded(
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Next'),
+                  onPressed: controller.next,
+                ),
+              )
+            else
+              Expanded(
+                child: FilledButton(
+                  onPressed: state.selectedOptions.isEmpty
+                      ? null
+                      : controller.submitQuestion,
+                  child: const Text('Submit'),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StepBadge extends StatelessWidget {
+  const _StepBadge({required this.text});
+  final String text;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          text,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.primary,
+            letterSpacing: 1.3,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CardRatingBar extends StatelessWidget {
+  const _CardRatingBar({required this.onRate});
+  final void Function(CardRating) onRate;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final items = [
+      (CardRating.again, 'Again', Colors.red.shade400),
+      (CardRating.hard, 'Hard', Colors.orange.shade400),
+      (CardRating.good, 'Good', Colors.green.shade400),
+      (CardRating.easy, 'Easy', Colors.blue.shade400),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'How well did you know this?',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: theme.colorScheme.primary),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: theme.textTheme.titleMedium),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+            for (final (rating, label, color) in items) ...[
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: color,
+                    side: BorderSide(color: color.withOpacity(0.6)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                ],
+                  onPressed: () => onRate(rating),
+                  child: Text(label),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '$count',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                color: theme.colorScheme.primary,
-              ),
-            ),
+              if (rating != CardRating.easy) const SizedBox(width: 8),
+            ],
           ],
         ),
+      ],
+    );
+  }
+}
+
+class _ProgressBar extends StatelessWidget {
+  const _ProgressBar({required this.state});
+  final StudySessionState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = state.items.length;
+    final value = total == 0 ? 0.0 : state.index / total;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: LinearProgressIndicator(
+          value: value.clamp(0.0, 1.0),
+          minHeight: 6,
+          backgroundColor:
+              Theme.of(context).colorScheme.surfaceContainerHighest,
+        ),
+      ),
+    );
+  }
+}
+
+class _DoneView extends StatelessWidget {
+  const _DoneView({required this.state, required this.onRestart});
+
+  final StudySessionState state;
+  final VoidCallback onRestart;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 24),
+          Icon(Icons.celebration,
+              size: 56, color: theme.colorScheme.primary),
+          const SizedBox(height: 12),
+          Text(
+            'Session complete',
+            style: theme.textTheme.headlineMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          _StatRow(
+            label: 'Flashcards graded',
+            value: '${state.cardsSeen} / ${state.cardsTotal}',
+          ),
+          _StatRow(
+            label: 'Questions answered',
+            value:
+                '${state.questionsAnswered} / ${state.questionsTotal}',
+          ),
+          _StatRow(
+            label: 'Accuracy',
+            value:
+                '${(state.accuracy * 100).toStringAsFixed(0)}%  (${state.questionsCorrect}/${state.questionsAnswered})',
+          ),
+          const Spacer(),
+          FilledButton.icon(
+            onPressed: onRestart,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Study again'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).maybePop(),
+            icon: const Icon(Icons.menu_book),
+            label: const Text('Back to browse'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatRow extends StatelessWidget {
+  const _StatRow({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Text(value, style: theme.textTheme.titleMedium),
+        ],
       ),
     );
   }
