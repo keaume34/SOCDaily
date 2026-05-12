@@ -227,7 +227,8 @@ Conventions:
       scp /tmp/pdfs.tar.gz ubuntu@100.110.125.8:/tmp/
       ssh ubuntu@100.110.125.8 "tar xzf /tmp/pdfs.tar.gz -C /var/www/socdaily-pdfs"
       ```
-    - The current sample PDFs on the VPS are named after the *topic_code* (`<subject>/<chapter>/<topic-code>.pdf`). The seed JSON's `source_pdf` field (e.g. `"Phishing Notes.pdf"`) slugifies to `phishing-notes.pdf` — to make existing seeds reachable, either re-upload PDFs at the slugified path or edit the seed JSON's `source_pdf` to match the on-disk filename.
+    - The current sample PDFs on the VPS are named after the *topic_code* (`<subject>/<chapter>/<topic-code>.pdf`).
+    - **Resolved**: the 4 bundled seed JSONs (`phishing-indicators`, `siem-core-concepts`, `soc-mission`, `soc-tier-roles`) now use `source_pdf: "<topic-code>.pdf"` so `buildRelativePath` resolves straight to the on-disk path. When the user adds new seeds later, keep `source_pdf` aligned with the actual VPS filename — the convention is `<topic-code>.pdf` namespaced by `<subject>/<chapter>/` (which the lookup adds automatically). To wire up a brand new human-named PDF instead, re-upload it to the VPS at the slugified path the app computes (`slugifyPdfFilename` lowercases + dashes the name).
 
 ---
 

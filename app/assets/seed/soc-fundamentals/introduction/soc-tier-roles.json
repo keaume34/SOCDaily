@@ -6,7 +6,7 @@
   "topic_code": "soc-tier-roles",
   "topic_title": "SOC Tier Roles (L1 / L2 / L3)",
   "topic_summary": "Responsibilities, escalation flow, and skill expectations for each SOC tier.",
-  "source_pdf": "SOC Analyst Guide.pdf",
+  "source_pdf": "soc-tier-roles.pdf",
   "flashcards": [
     {
       "front": "What is the primary responsibility of an L1 SOC Analyst?",

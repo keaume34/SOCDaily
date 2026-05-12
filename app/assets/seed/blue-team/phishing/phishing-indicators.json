@@ -6,7 +6,7 @@
   "topic_code": "phishing-indicators",
   "topic_title": "Phishing Indicators a SOC L1 Must Recognize",
   "topic_summary": "Quick-pivot indicators that turn 'just another email' into an actionable incident.",
-  "source_pdf": "Phishing Notes.pdf",
+  "source_pdf": "phishing-indicators.pdf",
   "flashcards": [
     {
       "front": "Name three high-signal envelope indicators in a phishing email.",

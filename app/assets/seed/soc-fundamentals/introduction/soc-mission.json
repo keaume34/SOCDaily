@@ -6,7 +6,7 @@
   "topic_code": "soc-mission",
   "topic_title": "Mission, Scope, and KPIs of a SOC",
   "topic_summary": "What a SOC actually delivers to the business and how its effectiveness is measured.",
-  "source_pdf": "SOC Analyst Guide.pdf",
+  "source_pdf": "soc-mission.pdf",
   "flashcards": [
     {
       "front": "State the SOC mission in one sentence.",
