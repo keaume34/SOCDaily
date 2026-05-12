@@ -196,7 +196,39 @@ Conventions:
   - [x] `pubspec.yaml`: added `supabase_flutter: ^2.8.0`
   - [x] 15 new tests (8 `in_memory_sync_remote_test`: pairing happy path, redeem unknown code, redeem rejects 3rd device, redeem refuses expired pair, payload filter by device, last-write-wins, since filter; 3 `sync_engine_test`: card state propagates between two devices, conflict resolves via newer updated_at, bookmarks propagate; 6 `sync_controller_test`: initial idle, unconfigured fallback, generate, redeem unknown, unpair, two-container end-to-end sync) — total 67 pass
   - [x] `flutter analyze` clean
-- **P12 — PDF source viewer (VPS-hosted)** [ ]
+- **P12 — PDF source viewer (VPS-hosted)** [x]
+  - **VPS side (DONE in the prior session)**
+    - User authorized Devin's VM onto their Tailscale tailnet via login link (no auth-key needed). Devin VM hostname: `devin-socdaily` (`100.82.82.92`).
+    - SSH passwordless via Tailscale SSH to `ubuntu@100.110.125.8` (a.k.a. `neam-vps`, Ubuntu 24.04, 37 GB free).
+    - `nginx 1.24.0` installed on VPS. `/var/www/socdaily-pdfs/` created, owned by `ubuntu:ubuntu`.
+    - `/etc/nginx/sites-available/socdaily-pdfs` server block: listens on `100.110.125.8:8080` (tailnet IP only — not exposed publicly). Serves `*.pdf` with `Content-Type: application/pdf`, `Accept-Ranges: bytes`, `Cache-Control: public, max-age=2592000, immutable`, `Access-Control-Allow-Origin: *`. Has `/healthz` returning `ok` and `autoindex on; autoindex_format json;` for directory listings.
+    - 4 sample PDFs (3 pages each, generated via `reportlab`) uploaded under `<subject>/<chapter>/<topic-code>.pdf` (e.g. `soc-fundamentals/introduction/soc-mission.pdf`). `curl -sI` returns 200 + correct headers; byte-range request returns valid `%PDF-1.3` magic.
+  - **Flutter side (DONE)**
+    - [x] `lib/src/pdf/pdf_source_config.dart`: `PdfSourceConfig.fromEnvironment()` reads `--dart-define=PDF_BASE_URL=…`; `isConfigured` gates UI buttons + the viewer screen (mirrors `SyncConfig` from P11). Exposes `pdfSourceConfigProvider`.
+    - [x] `lib/src/pdf/pdf_source_service.dart`:
+      - `PdfSourceService.buildUrl(loc)` + static `buildRelativePath(loc)` (pure): bare filename → `<subject>/<chapter>/<slug>.pdf`; path with slashes → preserved-but-slugified; Windows-style backslashes normalized; empty string → deterministic `source.pdf` placeholder.
+      - `slugifyPdfFilename` lowercases, strips `.pdf`, collapses non-alphanumerics to single dashes, trims dashes, re-appends `.pdf`.
+      - `cacheKeyFor(url)` = sha1 hex (via `crypto: ^3.0.5` added as direct dep — already transitive; no `flutter_cache_manager`).
+      - `fetchPdf(loc)` downloads via `Dio` into `<getApplicationDocumentsDirectory>/socdaily/pdf_cache/<sha1>.pdf` with a configurable 30-day TTL; throws `PdfSourceException` on dio failures.
+      - `PdfSourceLookup`: joins `sources` → flashcards/questions → topics → chapters → subjects so a `sources.id` resolves to a rich `PdfSourceContext` (subject/chapter codes + topic title) for both URL building and the viewer's banner.
+      - Providers: `pdfSourceServiceProvider`, `pdfSourceLookupProvider`, plus a private `_pdfDioProvider`.
+    - [x] `lib/src/features/pdf/pdf_viewer_screen.dart` (`/source/:sourceId?topicId=T&page=N`): uses the existing `printing.PdfPreview` (already in pubspec from P9 — no extra deps). Defaults to rendering only the source page via `pages: [page-1]` so the user lands on the citation; an AppBar toggle switches to "Show all pages". Loading + error + retry + unconfigured states all implemented. Header strip shows source title + subject / chapter / topic breadcrumb + a "Source page N" pill.
+    - [x] `lib/src/app/router.dart`: `/source/:sourceId` route with optional `?topicId=` + `?page=` query parameters.
+    - [x] `lib/src/features/study/topic_study_screen.dart`: new `OpenSourceButton` consumer widget shows up under "Explain deeper" for flashcards, and after submitting an MCQ — only when `card.sourceId != null && PdfSourceConfig.isConfigured` (hidden silently otherwise). Wired via `context.push('/source/<id>?topicId=…&page=…')`.
+    - [x] `pubspec.yaml`: added `crypto: ^3.0.5` (already transitive; promoted to direct dep so the cache-key sha1 doesn't depend on lockfile resolution accidents).
+    - [x] 15 new tests (`test/pdf/pdf_source_service_test.dart`): 5× `slugifyPdfFilename` (basic, diacritics + punctuation, dash trimming, no-alphanumeric fallback, missing-extension), 4× `buildRelativePath` (bare filename, paths with slashes, Windows backslashes, empty fallback), 1× `buildUrl` (trailing-slash trim), 2× `cacheKeyFor` (sha1 shape + uniqueness), 3× `PdfSourceConfig.isConfigured` — total 84 pass.
+    - [x] `flutter analyze` clean.
+  - **Operational notes (carried forward)**
+    - Tailscale MagicDNS is **off** on the user's tailnet — use the bare IP `100.110.125.8` (not `neam-vps`).
+    - If Devin's VM is rebuilt fresh, re-auth Tailscale: `sudo tailscale up --hostname=devin-socdaily --accept-routes --accept-dns=false` (user clicks the printed login URL — no `TS_AUTHKEY`).
+    - PDFs are kept *off* git per the existing `.gitignore`. To push more PDFs from the repo's `raw/pdf/` into the VPS:
+      ```
+      tar -C raw/pdf -czf /tmp/pdfs.tar.gz .
+      scp /tmp/pdfs.tar.gz ubuntu@100.110.125.8:/tmp/
+      ssh ubuntu@100.110.125.8 "tar xzf /tmp/pdfs.tar.gz -C /var/www/socdaily-pdfs"
+      ```
+    - The current sample PDFs on the VPS are named after the *topic_code* (`<subject>/<chapter>/<topic-code>.pdf`).
+    - **Resolved**: the 4 bundled seed JSONs (`phishing-indicators`, `siem-core-concepts`, `soc-mission`, `soc-tier-roles`) now use `source_pdf: "<topic-code>.pdf"` so `buildRelativePath` resolves straight to the on-disk path. When the user adds new seeds later, keep `source_pdf` aligned with the actual VPS filename — the convention is `<topic-code>.pdf` namespaced by `<subject>/<chapter>/` (which the lookup adds automatically). To wire up a brand new human-named PDF instead, re-upload it to the VPS at the slugified path the app computes (`slugifyPdfFilename` lowercases + dashes the name).
 
 ---
 

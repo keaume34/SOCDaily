@@ -6,7 +6,7 @@
   "topic_code": "siem-core-concepts",
   "topic_title": "What a SIEM Actually Does",
   "topic_summary": "Aggregation, normalization, correlation, and alerting — the four jobs every SIEM shares.",
-  "source_pdf": "SIEM for Beginners.pdf",
+  "source_pdf": "siem-core-concepts.pdf",
   "flashcards": [
     {
       "front": "Name the four core functions of a SIEM.",

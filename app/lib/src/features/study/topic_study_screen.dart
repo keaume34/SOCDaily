@@ -10,6 +10,7 @@ import '../../ai/tutor_sheet.dart';
 import '../../data/db/app_database.dart';
 import '../../data/db/content_repository.dart';
 import '../../data/db/user_state_repository.dart';
+import '../../pdf/pdf_source_config.dart';
 import '../../theme/gradient_background.dart';
 import '../settings/settings_controller.dart';
 import 'study_session_controller.dart';
@@ -173,6 +174,11 @@ class _CurrentItem extends ConsumerWidget {
               ),
             ),
           ),
+          OpenSourceButton(
+            topicId: topicId,
+            sourceId: item.card.sourceId,
+            sourcePage: item.card.sourcePage,
+          ),
           const SizedBox(height: 12),
           _CardRatingBar(
             onRate: controller.rateFlashcard,
@@ -224,6 +230,12 @@ class _CurrentItem extends ConsumerWidget {
                 ),
               ),
             ),
+          ),
+        if (state.submitted)
+          OpenSourceButton(
+            topicId: topicId,
+            sourceId: q.question.sourceId,
+            sourcePage: q.question.sourcePage,
           ),
         Row(
           children: [
@@ -569,6 +581,44 @@ class _DoneView extends StatelessWidget {
             label: const Text('Back to browse'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class OpenSourceButton extends ConsumerWidget {
+  const OpenSourceButton({
+    required this.topicId,
+    required this.sourceId,
+    required this.sourcePage,
+    super.key,
+  });
+
+  final int topicId;
+  final int? sourceId;
+  final int? sourcePage;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (sourceId == null) return const SizedBox.shrink();
+    final config = ref.watch(pdfSourceConfigProvider);
+    if (!config.isConfigured) return const SizedBox.shrink();
+    final query = <String, String>{
+      'topicId': topicId.toString(),
+      if (sourcePage != null) 'page': sourcePage!.toString(),
+    };
+    final uri = Uri(
+      path: '/source/$sourceId',
+      queryParameters: query.isEmpty ? null : query,
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: OutlinedButton.icon(
+        icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+        label: Text(sourcePage != null
+            ? 'Open source page $sourcePage'
+            : 'Open source PDF'),
+        onPressed: () => context.push(uri.toString()),
       ),
     );
   }
