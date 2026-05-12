@@ -11,6 +11,7 @@ import '../features/cheatsheet/cheatsheet_screen.dart';
 import '../features/daily/daily_challenge_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/bookmarks_screen.dart';
+import '../features/pdf/pdf_viewer_screen.dart';
 import '../features/pomodoro/pomodoro_screen.dart';
 import '../features/quiz/quiz_screen.dart';
 import '../features/search/search_screen.dart';
@@ -97,6 +98,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/sync',
         builder: (context, state) => const SyncScreen(),
+      ),
+      GoRoute(
+        path: '/source/:sourceId',
+        builder: (context, state) {
+          final sourceId = int.parse(state.pathParameters['sourceId']!);
+          final topicId =
+              int.tryParse(state.uri.queryParameters['topicId'] ?? '');
+          final page =
+              int.tryParse(state.uri.queryParameters['page'] ?? '');
+          return PdfViewerScreen(
+            sourceId: sourceId,
+            topicId: topicId,
+            page: page,
+          );
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => AppShell(
