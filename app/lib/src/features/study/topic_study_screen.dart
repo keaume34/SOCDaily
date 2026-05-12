@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/db/app_database.dart';
 import '../../data/db/content_repository.dart';
+import '../../data/db/user_state_repository.dart';
 import '../../theme/gradient_background.dart';
 import '../settings/settings_controller.dart';
 import 'study_session_controller.dart';
@@ -142,7 +143,13 @@ class _CurrentItem extends ConsumerWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _StepBadge(text: 'FLASHCARD'),
+          Row(
+            children: [
+              const _StepBadge(text: 'FLASHCARD'),
+              const Spacer(),
+              ItemActions(kind: 'flashcard', id: item.card.id),
+            ],
+          ),
           const SizedBox(height: 12),
           Expanded(
             child: FlashcardView(
@@ -165,7 +172,13 @@ class _CurrentItem extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _StepBadge(text: 'QUESTION'),
+        Row(
+          children: [
+            const _StepBadge(text: 'QUESTION'),
+            const Spacer(),
+            ItemActions(kind: 'question', id: q.question.id),
+          ],
+        ),
         const SizedBox(height: 12),
         Expanded(
           child: SingleChildScrollView(
@@ -203,6 +216,176 @@ class _CurrentItem extends ConsumerWidget {
         ),
       ],
     );
+  }
+}
+
+class ItemActions extends ConsumerWidget {
+  const ItemActions({required this.kind, required this.id, super.key});
+  final String kind;
+  final int id;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final key = (kind: kind, id: id);
+    final bookmarked = ref.watch(isBookmarkedProvider(key));
+    final notes = ref.watch(notesForItemProvider(key));
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: 'Bookmark',
+          icon: Icon(
+            bookmarked.maybeWhen(
+              data: (v) => v ? Icons.bookmark : Icons.bookmark_border,
+              orElse: () => Icons.bookmark_border,
+            ),
+          ),
+          onPressed: () async {
+            await ref
+                .read(userStateRepositoryProvider)
+                .toggleBookmark(kind, id);
+            ref.invalidate(isBookmarkedProvider(key));
+            ref.invalidate(bookmarksProvider);
+          },
+        ),
+        IconButton(
+          tooltip: 'Notes',
+          icon: Badge.count(
+            count: notes.maybeWhen(
+              data: (rows) => rows.length,
+              orElse: () => 0,
+            ),
+            isLabelVisible: notes.maybeWhen(
+              data: (rows) => rows.isNotEmpty,
+              orElse: () => false,
+            ),
+            child: const Icon(Icons.notes_outlined),
+          ),
+          onPressed: () => _openNotesSheet(context, ref, kind, id),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openNotesSheet(
+      BuildContext context, WidgetRef ref, String kind, int id) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => NotesSheet(kind: kind, id: id),
+    );
+  }
+}
+
+class NotesSheet extends ConsumerStatefulWidget {
+  const NotesSheet({required this.kind, required this.id, super.key});
+  final String kind;
+  final int id;
+
+  @override
+  ConsumerState<NotesSheet> createState() => _NotesSheetState();
+}
+
+class _NotesSheetState extends ConsumerState<NotesSheet> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final key = (kind: widget.kind, id: widget.id);
+    final notes = ref.watch(notesForItemProvider(key));
+    final theme = Theme.of(context);
+    final insets = MediaQuery.of(context).viewInsets;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + insets.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Your notes', style: theme.textTheme.titleLarge),
+          const SizedBox(height: 12),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 220),
+            child: notes.when(
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Text('$e'),
+              data: (rows) {
+                if (rows.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      'No notes yet. Capture your own commentary, mnemonics, or links to playbooks.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  );
+                }
+                return ListView.separated(
+                  itemCount: rows.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, i) {
+                    final note = rows[i];
+                    return ListTile(
+                      title: Text(note.body),
+                      subtitle: Text(
+                        _format(note.createdAt),
+                        style: theme.textTheme.labelSmall,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () async {
+                          await ref
+                              .read(userStateRepositoryProvider)
+                              .deleteNote(note.id);
+                          ref.invalidate(notesForItemProvider(key));
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'Add a note…',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: () async {
+              final body = _controller.text.trim();
+              if (body.isEmpty) return;
+              await ref
+                  .read(userStateRepositoryProvider)
+                  .addNote(widget.kind, widget.id, body);
+              _controller.clear();
+              ref.invalidate(notesForItemProvider(key));
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Save note'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _format(DateTime t) {
+    return '${t.year}-${t.month.toString().padLeft(2, '0')}-${t.day.toString().padLeft(2, '0')} '
+        '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
   }
 }
 

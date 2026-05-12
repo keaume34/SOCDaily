@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 
 import '../features/browse/browse_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/library/bookmarks_screen.dart';
+import '../features/search/search_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 import '../features/study/study_screen.dart';
@@ -34,6 +36,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/study/today',
         builder: (context, state) => const TodayReviewScreen(),
+      ),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: '/bookmarks',
+        builder: (context, state) => const BookmarksScreen(),
       ),
       GoRoute(
         path: '/study/topic/:id',

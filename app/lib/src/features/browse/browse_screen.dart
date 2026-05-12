@@ -31,6 +31,19 @@ class BrowseScreen extends ConsumerWidget {
               title: Text(l10n.navBrowse),
               pinned: true,
               backgroundColor: Colors.transparent,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  tooltip: 'Search',
+                  onPressed: () => context.push('/search'),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.bookmark_border),
+                  tooltip: 'Bookmarks',
+                  onPressed: () => context.push('/bookmarks'),
+                ),
+                const SizedBox(width: 4),
+              ],
             ),
             ...boot.when(
               loading: () => [

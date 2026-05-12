@@ -109,7 +109,7 @@ Conventions:
   - [x] 4 session-controller tests against in-memory drift DB
   - [x] PR #5 pushed
 
-- **P4 — SM-2 spaced repetition + Today queue** [~]
+- **P4 — SM-2 spaced repetition + Today queue** [x]
   - [x] Pure SM-2 algorithm in `lib/src/features/study/sm2.dart` (Anki-style Again/Hard/Good/Easy → q0/q2/q4/q5)
   - [x] `UserStateRepository` persists per-card `UserCardState` (ease/interval/nextReview/reviewCount/lastResult) + per-question `UserQuestionState` (attempts/correct/lastAttempt/lastChoice)
   - [x] `dueFlashcards()` query: includes never-reviewed cards + cards with `nextReview <= now`
@@ -118,7 +118,16 @@ Conventions:
   - [x] Home dashboard chips show real `Due / New` counts; "Start session" CTA routes to Today queue
   - [x] `StudySessionController` writes SM-2 + MCQ state to DB on each grade/submit
   - [x] 6 SM-2 progression tests + 6 user-state-repo tests + existing 9 still pass (total 21)
-- **P5 — Bookmarks + per-card notes + FTS search** [ ]
+  - [x] PR #6 pushed
+
+- **P5 — Bookmarks + per-card notes + search** [~]
+  - [x] `UserStateRepository`: `isBookmarked/toggleBookmark/listBookmarks` + `listNotesForItem/addNote/deleteNote` + `searchFlashcards/searchQuestions` (LIKE-based for MVP)
+  - [x] `searchProvider`/`bookmarksProvider`/`isBookmarkedProvider`/`notesForItemProvider` (Riverpod families)
+  - [x] `SearchScreen` at `/search` — debounced text field, "Flashcards" + "Questions" result sections with type + difficulty badges
+  - [x] `BookmarksScreen` at `/bookmarks` — list of saved flashcards + questions with preview + delete
+  - [x] Bookmark + notes icons next to FLASHCARD/QUESTION step badge in TopicStudyScreen; modal bottom sheet for note CRUD
+  - [x] Browse top app bar: search + bookmarks icon buttons
+  - [x] 5 new tests (bookmark toggle/list, note add/list/delete, flashcard + question search) — total 26 pass
 - **P6 — Stats / streak / heatmap** [ ]
 - **P7 — AI Settings + "Explain deeper" + "Why was I wrong?"** [ ]
 - **P8 — Daily Challenge + Quiz mock exam + Cheatsheet** [ ]
