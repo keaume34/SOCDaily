@@ -148,7 +148,7 @@ Conventions:
   - [x] 6 new tests (configured-check, provider name fallback, explainDeeper prompt assembly, whyWrong prompt + chosen vs correct, exception propagation, schema sanity) — total 38 pass
   - [x] PR #9 pushed
 
-- **P8 — Daily Challenge + Quiz mock exam + Cheatsheet** [~]
+- **P8 — Daily Challenge + Quiz mock exam + Cheatsheet** [x]
   - [x] `ContentRepository.dailyChallenge({day, flashcardCount, questionCount})`: seeded Fisher-Yates (`yyyymmdd`) → same picks across devices, day-over-day rotation
   - [x] `ContentRepository.randomQuestions(count, {seed})` for the timed mock exam; `cheatsheetForSubject(subjectId)` rolls up flashcards by topic
   - [x] `DailyChallengeScreen` (`/daily`): mixed flashcards + MCQs, real Rating buttons (records SM-2 + activity), summary card on completion
@@ -156,7 +156,17 @@ Conventions:
   - [x] `CheatsheetSubjectPickerScreen` + `CheatsheetScreen` (`/cheatsheet`, `/cheatsheet/:id`): table-style Term / Definition rendering for fast scanning before an exam
   - [x] Home dashboard: Daily Challenge / Mock exam / Cheatsheet cards added next to Today queue and Browse
   - [x] 5 new tests (daily determinism, day-over-day rotation, count clamping, random seed reproducibility, cheatsheet grouping) — total 43 pass
-- **P9 — Pomodoro + export certificate** [ ]
+  - [x] PR #10 pushed
+
+- **P9 — Pomodoro + export certificate** [~]
+  - [x] `lib/src/features/pomodoro/pomodoro_controller.dart`: Riverpod `Notifier` for global timer state (`PomodoroPhase` idle/focus/shortBreak/longBreak, remaining seconds, running, completedFocus, configurable durations). Timer survives navigation because the controller lives at app scope. `start/pause/reset/skip/updateDurations` with `SharedPreferences` persistence of focus/short/long/cycles
+  - [x] `lib/src/features/pomodoro/pomodoro_screen.dart` (`/pomodoro`): gradient progress ring rendered via `CustomPainter` (sweep gradient using current accent's deep + soft), phase chip, tabular-numeral countdown, focus-done counter, big play/pause + reset + skip controls, inline duration pickers via ChoiceChips
+  - [x] `lib/src/services/certificate_service.dart`: builds an A4-landscape PDF certificate via the `pdf` package; header + name + 4 stat blocks (cards mastered / questions answered / longest streak / subjects studied) + issue-date footer + "SELF-PACED" badge
+  - [x] `lib/src/features/certificate/certificate_screen.dart` (`/certificate`): name input + `PdfPreview` from `printing` package — user can share / save / print directly
+  - [x] Home dashboard: Pomodoro + Certificate cards added; routes wired in `router.dart`
+  - [x] `pubspec.yaml`: added `pdf: ^3.11.1` + `printing: ^5.13.4`
+  - [x] 9 new tests (7 pomodoro state machine: idle init, start, skip → break + completion count, long break every N cycles, reset, updateDurations persistence, progress bounds; 2 certificate: PDF magic-byte + zero-attempts handling) — total 52 pass
+
 - **P10 — Admin web (Next.js)** [ ]
 - **P11 — Sync 2-way via Supabase + pairing code** [ ]
 - **P12 — PDF source viewer (VPS-hosted)** [ ]
