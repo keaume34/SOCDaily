@@ -43,6 +43,9 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.4
 
+  # Cloud sync (P11)
+  supabase_flutter: ^2.8.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

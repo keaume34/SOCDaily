@@ -168,7 +168,7 @@ Conventions:
   - [x] 9 new tests (7 pomodoro state machine: idle init, start, skip → break + completion count, long break every N cycles, reset, updateDurations persistence, progress bounds; 2 certificate: PDF magic-byte + zero-attempts handling) — total 52 pass
   - [x] PR #11 pushed
 
-- **P10 — Admin web (Next.js)** [~]
+- **P10 — Admin web (Next.js)** [x]
   - [x] Next.js 14 App Router scaffold at `admin/` (TypeScript + Tailwind + Vitest, no shadcn CLI — hand-rolled components)
   - [x] `admin/src/lib/content.ts`: file-backed data layer that reads/writes the JSON content bank under `app/assets/seed/` (same files the Flutter app bundles). Lazy `seedRootPath()` so `SOCDAILY_SEED_DIR` env can override
   - [x] `admin/src/lib/auth.ts` + `/login`: optional cookie-based password gate. If `ADMIN_PASSWORD` unset → open mode (no auth, friction-free local dev)
@@ -179,15 +179,34 @@ Conventions:
   - [x] Settings `/settings`: shows runtime config (seed dir, auth mode, Node version) + how-to-configure pointer
   - [x] `admin/README.md`, `admin/.env.example`
   - [x] 3 Vitest tests for the data layer (load library + totals, round-trip read/write, findTopicRef miss); `pnpm typecheck` + `pnpm lint` + `pnpm build` all green
-- **P11 — Sync 2-way via Supabase + pairing code** [ ]
+- **P11 — Sync 2-way via Supabase + pairing code** [x]
+  - [x] `supabase/schema.sql`: content tables (`subjects/chapters/topics/flashcards/questions/question_options`) + sync tables (`device_sync_pair`, `user_sync_payload`) + RLS (content read-only via anon, sync rows scoped by `(code, device_id)`) + `purge_expired_pairs()` cleanup function
+  - [x] `supabase/README.md`: setup + free-tier sizing + RLS recap
+  - [x] `lib/src/sync/sync_config.dart`: reads `SUPABASE_URL` / `SUPABASE_ANON_KEY` from `--dart-define`, gates everything by `isConfigured`
+  - [x] `lib/src/sync/device_id.dart`: random UUID v4 persisted to `SharedPreferences` (one device id per install)
+  - [x] `lib/src/sync/sync_types.dart`: `SyncPair` (code, deviceA, deviceB, timestamps, isExpired) and `SyncEnvelope` (code, deviceId, kind, item_key, payload, updatedAt) + `SyncKinds` constants (`card_state`, `question_state`, `bookmark`, `note`, `streak`)
+  - [x] `lib/src/sync/sync_remote.dart`: abstract `SyncRemote` interface (createPair / readPair / redeemPair / upsertPayload / upsertPayloadBatch / readRemotePayloads) so the engine is decoupled from Supabase
+  - [x] `lib/src/sync/in_memory_sync_remote.dart`: testable fake. Used by every sync test in CI
+  - [x] `lib/src/sync/supabase_sync_remote.dart`: production implementation against `supabase_flutter`. Retries on unique-violation when generating codes. Last-write-wins applied via `onConflict: 'code,device_id,kind,item_key'`
+  - [x] `lib/src/sync/sync_engine.dart`: snapshots local rows (`user_card_state`, `user_question_state`, `user_bookmarks`) into envelopes, pushes the batch, then pulls *the partner device's* envelopes and applies them with last-write-wins on `updated_at`. Returns `SyncRoundResult{uploaded, downloaded, applied, lastSyncedAt}`
+  - [x] `lib/src/sync/sync_controller.dart`: Riverpod `Notifier<SyncState>` with `SyncMode { unconfigured, idle, generating, redeeming, syncing, error }`. Persists active pair code + lastSyncedAt to `SharedPreferences`. Exposes `generatePairCode / redeemPairCode / syncNow / unpair`
+  - [x] `lib/main.dart`: calls `Supabase.initialize(...)` at startup when `SyncConfig.isConfigured` (build-time embedded anon key + url)
+  - [x] `lib/src/features/sync/sync_screen.dart` (`/sync`): paired status card, generate-code card with copy-to-clipboard, redeem-code card with 6-digit input, "Sync now" + "Unpair" actions, explainer card; gracefully degrades to an "unconfigured" placeholder when env-defines are missing
+  - [x] `lib/src/features/settings/settings_screen.dart`: added a "Cloud sync" section with status summary + deep-link button to `/sync`
+  - [x] `pubspec.yaml`: added `supabase_flutter: ^2.8.0`
+  - [x] 15 new tests (8 `in_memory_sync_remote_test`: pairing happy path, redeem unknown code, redeem rejects 3rd device, redeem refuses expired pair, payload filter by device, last-write-wins, since filter; 3 `sync_engine_test`: card state propagates between two devices, conflict resolves via newer updated_at, bookmarks propagate; 6 `sync_controller_test`: initial idle, unconfigured fallback, generate, redeem unknown, unpair, two-container end-to-end sync) — total 67 pass
+  - [x] `flutter analyze` clean
 - **P12 — PDF source viewer (VPS-hosted)** [ ]
 
 ---
 
 ## Open questions / blockers
 
-1. Supabase project credentials needed before P11 — will request when the
-   phase starts.
+1. Supabase credentials provided + stored as repo-scoped secrets
+   (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
+   Anon URL/key are embedded into release builds via `--dart-define`.
+   The service-role key is *only* used by the admin-web seed-push script,
+   never by the Flutter app.
 2. VPS SSH / domain needed before P12 — will request when the phase starts.
 3. AI key strategy: the app expects each user to supply their own OpenAI /
    Anthropic key in Settings. No shared key ships with the app.

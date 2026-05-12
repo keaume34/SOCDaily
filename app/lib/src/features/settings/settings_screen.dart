@@ -4,8 +4,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../ai/ai_settings.dart';
 import '../../l10n/app_localizations.dart';
+import '../../sync/sync_controller.dart';
 import '../../theme/app_accent.dart';
 import '../../theme/gradient_background.dart';
 import 'settings_controller.dart';
@@ -53,6 +56,9 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   const _SectionHeader(text: 'AI tutor'),
                   const _AiTutorCard(),
+                  const SizedBox(height: 24),
+                  const _SectionHeader(text: 'Cloud sync'),
+                  const _CloudSyncCard(),
                   const SizedBox(height: 24),
                   _SectionHeader(text: l10n.settingsAbout),
                   Card(
@@ -408,6 +414,93 @@ class _AiTutorCardState extends ConsumerState<_AiTutorCard> {
                   child: const Text('Clear key'),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CloudSyncCard extends ConsumerWidget {
+  const _CloudSyncCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(syncControllerProvider);
+    final theme = Theme.of(context);
+
+    if (s.mode == SyncMode.unconfigured) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Not configured', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 6),
+              Text(
+                'Build the app with --dart-define=SUPABASE_URL=... and '
+                '--dart-define=SUPABASE_ANON_KEY=... to enable two-device '
+                'sync via a 6-digit pairing code.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final statusLine = s.isPaired
+        ? 'Paired · code ${s.pairCode}'
+        : 'Not paired yet';
+    final lastLine = s.lastSyncedAt == null
+        ? 'Never synced'
+        : 'Last synced ${s.lastSyncedAt!.toLocal()}';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  s.isPaired
+                      ? Icons.cloud_done_outlined
+                      : Icons.cloud_off_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(statusLine, style: theme.textTheme.titleMedium),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              lastLine,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (s.errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                s.errorMessage!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
+              icon: const Icon(Icons.devices_outlined),
+              label: const Text('Manage devices…'),
+              onPressed: () => context.push('/sync'),
             ),
           ],
         ),
