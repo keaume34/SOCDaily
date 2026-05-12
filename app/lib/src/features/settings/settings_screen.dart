@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../ai/ai_settings.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_accent.dart';
 import '../../theme/gradient_background.dart';
@@ -49,6 +50,9 @@ class SettingsScreen extends ConsumerWidget {
                     current: settings.locale,
                     onChanged: controller.setLocale,
                   ),
+                  const SizedBox(height: 24),
+                  const _SectionHeader(text: 'AI tutor'),
+                  const _AiTutorCard(),
                   const SizedBox(height: 24),
                   _SectionHeader(text: l10n.settingsAbout),
                   Card(
@@ -264,6 +268,147 @@ class _LanguageTile extends StatelessWidget {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                 visualDensity: VisualDensity.compact,
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AiTutorCard extends ConsumerStatefulWidget {
+  const _AiTutorCard();
+
+  @override
+  ConsumerState<_AiTutorCard> createState() => _AiTutorCardState();
+}
+
+class _AiTutorCardState extends ConsumerState<_AiTutorCard> {
+  late final TextEditingController _baseUrlCtl;
+  late final TextEditingController _apiKeyCtl;
+  late final TextEditingController _modelCtl;
+  bool _showKey = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final s = ref.read(aiSettingsControllerProvider);
+    _baseUrlCtl = TextEditingController(text: s.baseUrl);
+    _apiKeyCtl = TextEditingController(text: s.apiKey);
+    _modelCtl = TextEditingController(text: s.model);
+  }
+
+  @override
+  void dispose() {
+    _baseUrlCtl.dispose();
+    _apiKeyCtl.dispose();
+    _modelCtl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ref.watch(aiSettingsControllerProvider);
+    final c = ref.read(aiSettingsControllerProvider.notifier);
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Bring your own LLM API key. Used for "Explain deeper" + '
+              '"Why was I wrong?". Stored on this device only.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<AiProvider>(
+              segments: [
+                for (final p in AiProvider.values)
+                  ButtonSegment(value: p, label: Text(p.label)),
+              ],
+              selected: {s.provider},
+              onSelectionChanged: (set) async {
+                final p = set.first;
+                await c.setProvider(p);
+                if (p == AiProvider.openaiCompat &&
+                    _baseUrlCtl.text.isEmpty) {
+                  _baseUrlCtl.text = AiSettings.initial.baseUrl;
+                  await c.setBaseUrl(_baseUrlCtl.text);
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            if (s.provider == AiProvider.openaiCompat)
+              TextField(
+                controller: _baseUrlCtl,
+                decoration: const InputDecoration(
+                  labelText: 'Base URL',
+                  hintText: 'https://api.openai.com/v1',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: c.setBaseUrl,
+              ),
+            if (s.provider == AiProvider.openaiCompat)
+              const SizedBox(height: 8),
+            TextField(
+              controller: _modelCtl,
+              decoration: const InputDecoration(
+                labelText: 'Model',
+                hintText: 'gpt-4o-mini  /  claude-3-haiku-20240307',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: c.setModel,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _apiKeyCtl,
+              obscureText: !_showKey,
+              decoration: InputDecoration(
+                labelText: 'API key',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _showKey ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () => setState(() => _showKey = !_showKey),
+                ),
+              ),
+              onChanged: c.setApiKey,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  s.isConfigured
+                      ? Icons.check_circle_outline
+                      : Icons.info_outline,
+                  size: 16,
+                  color: s.isConfigured
+                      ? Colors.green
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  s.isConfigured ? 'Configured' : 'Not configured',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () async {
+                    await c.clearApiKey();
+                    _apiKeyCtl.clear();
+                    setState(() {});
+                  },
+                  child: const Text('Clear key'),
+                ),
+              ],
+            ),
           ],
         ),
       ),

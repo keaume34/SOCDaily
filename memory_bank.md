@@ -130,13 +130,22 @@ Conventions:
   - [x] 5 new tests (bookmark toggle/list, note add/list/delete, flashcard + question search) — total 26 pass
   - [x] PR #7 pushed
 
-- **P6 — Stats / streak / heatmap** [~]
+- **P6 — Stats / streak / heatmap** [x]
   - [x] `UserStateRepository`: `recordActivity(cards, questions, now)` upserts the `user_streak` day bucket; auto-called from `recordFlashcardRating` + `recordQuestionAttempt`
   - [x] `streakStats({now})` computes current + longest consecutive-day streak; `activityHeatmap(days:90, now)` fills a complete grid with zero entries; `totals()` rollup of cards rated + total reviews + MCQ accuracy
   - [x] Providers: `streakStatsProvider`, `activityHeatmapProvider`, `totalsSnapshotProvider`
   - [x] `StatsScreen` rebuilt: gradient streak ring (uses current accent gradient), 3-chip totals row (Cards rated / Total reviews / MCQ accuracy), 13×7 heatmap with intensity-buckets + legend
   - [x] 6 new tests (per-day accumulate, streak counting, no-activity zero state, heatmap window/fills, totals aggregation, activity-on-rating) — total 32 pass
-- **P7 — AI Settings + "Explain deeper" + "Why was I wrong?"** [ ]
+  - [x] PR #8 pushed
+
+- **P7 — AI Settings + "Explain deeper" + "Why was I wrong?"** [~]
+  - [x] `lib/src/ai/llm_client.dart`: provider-agnostic `LlmClient` interface + `OpenAICompatClient` (chat/completions) + `AnthropicClient` (messages API) — mirrors Python pipeline pattern
+  - [x] `lib/src/ai/ai_settings.dart`: `AiSettings` (provider/baseUrl/apiKey/model) persisted via SharedPreferences; `aiSettingsControllerProvider` + `llmClientProvider`
+  - [x] `lib/src/ai/tutor_service.dart`: `TutorService.explainDeeper(card, topic)` + `TutorService.whyWrong(question, options, chosenIds)` — both emit structured SOC-tutor prompts with no-hallucination guardrails
+  - [x] `lib/src/ai/tutor_sheet.dart`: modal bottom sheet with loading / error / configure-CTA states; uses `flutter_markdown` to render the answer
+  - [x] Settings screen: "AI tutor" section with provider segmented button, base URL (OpenAI-compat only), model, masked API key with show/clear; status row indicates "Configured" / "Not configured"
+  - [x] Study screen: "Explain deeper" outlined button under every flashcard; "Why was I wrong?" appears after submitting an MCQ that scored 0
+  - [x] 6 new tests (configured-check, provider name fallback, explainDeeper prompt assembly, whyWrong prompt + chosen vs correct, exception propagation, schema sanity) — total 38 pass
 - **P8 — Daily Challenge + Quiz mock exam + Cheatsheet** [ ]
 - **P9 — Pomodoro + export certificate** [ ]
 - **P10 — Admin web (Next.js)** [ ]
