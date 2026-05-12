@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../ai/tutor_sheet.dart';
 import '../../data/db/app_database.dart';
 import '../../data/db/content_repository.dart';
 import '../../data/db/user_state_repository.dart';
@@ -159,7 +160,20 @@ class _CurrentItem extends ConsumerWidget {
               onSwipeNext: controller.next,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.auto_awesome, size: 18),
+            label: const Text('Explain deeper'),
+            onPressed: () => TutorSheet.show(
+              context,
+              title: 'Explain deeper',
+              task: (svc) => svc.explainDeeper(
+                card: item.card,
+                topic: topic.title,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           _CardRatingBar(
             onRate: controller.rateFlashcard,
           ),
@@ -193,6 +207,24 @@ class _CurrentItem extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
+        if (state.submitted &&
+            state.questionResults[q.question.id] == false)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: const Text('Why was I wrong?'),
+              onPressed: () => TutorSheet.show(
+                context,
+                title: 'Why was I wrong?',
+                task: (svc) => svc.whyWrong(
+                  question: q.question,
+                  options: q.options,
+                  chosenIds: state.selectedOptions,
+                ),
+              ),
+            ),
+          ),
         Row(
           children: [
             if (state.submitted)
