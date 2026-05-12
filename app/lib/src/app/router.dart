@@ -19,6 +19,7 @@ import '../features/stats/stats_screen.dart';
 import '../features/study/study_screen.dart';
 import '../features/study/today_review_screen.dart';
 import '../features/study/topic_study_screen.dart';
+import '../features/sync/sync_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/app_shell.dart';
 
@@ -92,6 +93,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/certificate',
         builder: (context, state) => const CertificateScreen(),
+      ),
+      GoRoute(
+        path: '/sync',
+        builder: (context, state) => const SyncScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => AppShell(
