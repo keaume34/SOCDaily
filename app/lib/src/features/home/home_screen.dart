@@ -97,7 +97,21 @@ class HomeScreen extends ConsumerWidget {
                     icon: Icons.bolt,
                     title: l10n.homeDailyChallenge,
                     subtitle: l10n.homeDailyChallengeSubtitle,
-                    onTap: () {},
+                    onTap: () => context.push('/daily'),
+                  ),
+                  const SizedBox(height: 12),
+                  _DashCard(
+                    icon: Icons.timer_outlined,
+                    title: 'Mock exam',
+                    subtitle: 'Timed random MCQs — practice under pressure.',
+                    onTap: () => context.push('/quiz'),
+                  ),
+                  const SizedBox(height: 12),
+                  _DashCard(
+                    icon: Icons.table_chart_outlined,
+                    title: 'Cheatsheet',
+                    subtitle: 'Table view of all flashcards by subject.',
+                    onTap: () => context.push('/cheatsheet'),
                   ),
                   const SizedBox(height: 12),
                   _DashCard(

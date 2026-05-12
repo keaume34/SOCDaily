@@ -68,6 +68,74 @@ class ContentRepository {
         .get();
   }
 
+  Future<List<Flashcard>> allFlashcards() {
+    return (_db.select(_db.flashcards)
+          ..orderBy([(f) => OrderingTerm(expression: f.id)]))
+        .get();
+  }
+
+  Future<List<Question>> allQuestions() {
+    return (_db.select(_db.questions)
+          ..orderBy([(q) => OrderingTerm(expression: q.id)]))
+        .get();
+  }
+
+  /// Deterministic daily picks: same set on every device for a given UTC
+  /// calendar date. Returns `(flashcards, questions)`.
+  Future<({List<Flashcard> flashcards, List<Question> questions})>
+      dailyChallenge({
+    DateTime? day,
+    int flashcardCount = 5,
+    int questionCount = 5,
+  }) async {
+    final d = day ?? DateTime.now().toUtc();
+    final seed = d.year * 10000 + d.month * 100 + d.day;
+    final allF = await allFlashcards();
+    final allQ = await allQuestions();
+    return (
+      flashcards: _deterministicPick(allF, flashcardCount, seed),
+      questions: _deterministicPick(allQ, questionCount, seed + 1),
+    );
+  }
+
+  static List<T> _deterministicPick<T>(List<T> items, int n, int seed) {
+    if (items.isEmpty || n <= 0) return const [];
+    final rng = _LcgRng(seed);
+    final indices = List<int>.generate(items.length, (i) => i);
+    // Fisher-Yates with seeded RNG.
+    for (var i = indices.length - 1; i > 0; i--) {
+      final j = rng.nextInt(i + 1);
+      final tmp = indices[i];
+      indices[i] = indices[j];
+      indices[j] = tmp;
+    }
+    final take = n > items.length ? items.length : n;
+    return [for (var k = 0; k < take; k++) items[indices[k]]];
+  }
+
+  Future<List<Question>> randomQuestions(int count, {int? seed}) async {
+    final all = await allQuestions();
+    if (all.isEmpty) return const [];
+    final actualSeed = seed ?? DateTime.now().millisecondsSinceEpoch;
+    return _deterministicPick(all, count, actualSeed);
+  }
+
+  Future<List<({Topic topic, List<Flashcard> flashcards})>>
+      cheatsheetForSubject(int subjectId) async {
+    final chapters = await listChapters(subjectId);
+    final rows = <({Topic topic, List<Flashcard> flashcards})>[];
+    for (final ch in chapters) {
+      final topics = await listTopics(ch.id);
+      for (final t in topics) {
+        final cards = await listFlashcardsForTopic(t.id);
+        if (cards.isNotEmpty) {
+          rows.add((topic: t, flashcards: cards));
+        }
+      }
+    }
+    return rows;
+  }
+
   Future<ContentCounts> globalCounts() async {
     final s = await _db.subjects.count().getSingle();
     final c = await _db.chapters.count().getSingle();
@@ -121,3 +189,15 @@ final topicsProvider =
 final contentCountsProvider = FutureProvider<ContentCounts>((ref) {
   return ref.watch(contentRepositoryProvider).globalCounts();
 });
+
+/// Tiny seeded linear-congruential RNG — keep daily challenge deterministic
+/// across devices and time zones without dragging in `dart:math.Random`'s
+/// platform variance for `nextInt(n)`.
+class _LcgRng {
+  _LcgRng(int seed) : _state = (seed == 0 ? 1 : seed) & 0x7fffffff;
+  int _state;
+  int nextInt(int bound) {
+    _state = (_state * 1103515245 + 12345) & 0x7fffffff;
+    return _state % bound;
+  }
+}
