@@ -39,6 +39,7 @@ class UserStateRepository {
     await _db
         .into(_db.userCardState)
         .insert(companion, mode: InsertMode.insertOrReplace);
+    await recordActivity(cards: 1, now: t);
     return update;
   }
 
@@ -66,6 +67,7 @@ class UserStateRepository {
           ),
           mode: InsertMode.insertOrReplace,
         );
+    await recordActivity(questions: 1, now: t);
   }
 
   /// All flashcards whose [nextReview] is on/before [asOf]. New cards
@@ -122,6 +124,122 @@ class UserStateRepository {
       due: due,
       newCount: newCount,
       total: total.read(_db.flashcards.id.count()) ?? 0,
+    );
+  }
+
+  // ---- Streak / activity log -------------------------------------------
+
+  static DateTime _dayBucket(DateTime t) => DateTime(t.year, t.month, t.day);
+
+  Future<void> recordActivity({
+    int cards = 0,
+    int questions = 0,
+    DateTime? now,
+  }) async {
+    final day = _dayBucket(now ?? DateTime.now());
+    final prev = await (_db.select(_db.userStreak)
+          ..where((s) => s.day.equals(day)))
+        .getSingleOrNull();
+    await _db.into(_db.userStreak).insert(
+          UserStreakCompanion.insert(
+            day: day,
+            cardsReviewed:
+                Value((prev?.cardsReviewed ?? 0) + cards),
+            questionsAnswered:
+                Value((prev?.questionsAnswered ?? 0) + questions),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
+  }
+
+  /// Returns `(currentStreak, longestStreak)` measured in consecutive
+  /// days that have ≥1 card or question.
+  Future<({int current, int longest})> streakStats(
+      {DateTime? now}) async {
+    final today = _dayBucket(now ?? DateTime.now());
+    final rows = await (_db.select(_db.userStreak)
+          ..orderBy([(s) => OrderingTerm.asc(s.day)]))
+        .get();
+    if (rows.isEmpty) {
+      return (current: 0, longest: 0);
+    }
+    final days = rows
+        .where((r) => r.cardsReviewed > 0 || r.questionsAnswered > 0)
+        .map((r) => _dayBucket(r.day))
+        .toSet();
+    int longest = 0;
+    int run = 0;
+    DateTime? prev;
+    final sorted = days.toList()..sort();
+    for (final d in sorted) {
+      if (prev != null && d.difference(prev).inDays == 1) {
+        run += 1;
+      } else {
+        run = 1;
+      }
+      if (run > longest) longest = run;
+      prev = d;
+    }
+    // Current streak: count back from today (or yesterday — keeps streak
+    // alive until midnight if user studied today).
+    int current = 0;
+    var cursor = today;
+    while (days.contains(cursor)) {
+      current += 1;
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+    return (current: current, longest: longest);
+  }
+
+  /// Returns a list of (day, cardsReviewed+questionsAnswered) for the
+  /// last [days] days inclusive of [now]. Days with no activity get a
+  /// zero entry so the heatmap renders a full grid.
+  Future<List<HeatmapDay>> activityHeatmap({
+    int days = 90,
+    DateTime? now,
+  }) async {
+    final today = _dayBucket(now ?? DateTime.now());
+    final earliest = today.subtract(Duration(days: days - 1));
+    final rows = await (_db.select(_db.userStreak)
+          ..where((s) => s.day.isBiggerOrEqualValue(earliest))
+          ..orderBy([(s) => OrderingTerm.asc(s.day)]))
+        .get();
+    final byDay = {
+      for (final r in rows)
+        _dayBucket(r.day): r.cardsReviewed + r.questionsAnswered,
+    };
+    return [
+      for (var i = 0; i < days; i++)
+        HeatmapDay(
+          day: earliest.add(Duration(days: i)),
+          count: byDay[earliest.add(Duration(days: i))] ?? 0,
+        ),
+    ];
+  }
+
+  Future<TotalsSnapshot> totals() async {
+    final card = await (_db.selectOnly(_db.userCardState)
+          ..addColumns([
+            _db.userCardState.flashcardId.count(),
+            _db.userCardState.reviewCount.sum(),
+          ]))
+        .getSingle();
+    final mcq = await (_db.selectOnly(_db.userQuestionState)
+          ..addColumns([
+            _db.userQuestionState.attempts.sum(),
+            _db.userQuestionState.correct.sum(),
+          ]))
+        .getSingle();
+    final attempts =
+        mcq.read(_db.userQuestionState.attempts.sum()) ?? 0;
+    final correct = mcq.read(_db.userQuestionState.correct.sum()) ?? 0;
+    return TotalsSnapshot(
+      cardsKnown:
+          card.read(_db.userCardState.flashcardId.count()) ?? 0,
+      cardsReviewed:
+          card.read(_db.userCardState.reviewCount.sum()) ?? 0,
+      mcqAttempts: attempts,
+      mcqCorrect: correct,
     );
   }
 
@@ -214,6 +332,27 @@ class UserStateRepository {
   }
 }
 
+class HeatmapDay {
+  const HeatmapDay({required this.day, required this.count});
+  final DateTime day;
+  final int count;
+}
+
+class TotalsSnapshot {
+  const TotalsSnapshot({
+    required this.cardsKnown,
+    required this.cardsReviewed,
+    required this.mcqAttempts,
+    required this.mcqCorrect,
+  });
+  final int cardsKnown;
+  final int cardsReviewed;
+  final int mcqAttempts;
+  final int mcqCorrect;
+  double get accuracy =>
+      mcqAttempts == 0 ? 0 : mcqCorrect / mcqAttempts;
+}
+
 class DueCounts {
   const DueCounts({
     required this.due,
@@ -263,6 +402,21 @@ class SearchResults {
   final List<Question> questions;
   bool get isEmpty => flashcards.isEmpty && questions.isEmpty;
 }
+
+final streakStatsProvider =
+    FutureProvider.autoDispose<({int current, int longest})>((ref) async {
+  return ref.watch(userStateRepositoryProvider).streakStats();
+});
+
+final activityHeatmapProvider =
+    FutureProvider.autoDispose<List<HeatmapDay>>((ref) async {
+  return ref.watch(userStateRepositoryProvider).activityHeatmap();
+});
+
+final totalsSnapshotProvider =
+    FutureProvider.autoDispose<TotalsSnapshot>((ref) async {
+  return ref.watch(userStateRepositoryProvider).totals();
+});
 
 final searchProvider = FutureProvider.autoDispose
     .family<SearchResults, String>((ref, query) async {
