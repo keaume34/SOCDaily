@@ -120,7 +120,7 @@ Conventions:
   - [x] 6 SM-2 progression tests + 6 user-state-repo tests + existing 9 still pass (total 21)
   - [x] PR #6 pushed
 
-- **P5 — Bookmarks + per-card notes + search** [~]
+- **P5 — Bookmarks + per-card notes + search** [x]
   - [x] `UserStateRepository`: `isBookmarked/toggleBookmark/listBookmarks` + `listNotesForItem/addNote/deleteNote` + `searchFlashcards/searchQuestions` (LIKE-based for MVP)
   - [x] `searchProvider`/`bookmarksProvider`/`isBookmarkedProvider`/`notesForItemProvider` (Riverpod families)
   - [x] `SearchScreen` at `/search` — debounced text field, "Flashcards" + "Questions" result sections with type + difficulty badges
@@ -128,7 +128,14 @@ Conventions:
   - [x] Bookmark + notes icons next to FLASHCARD/QUESTION step badge in TopicStudyScreen; modal bottom sheet for note CRUD
   - [x] Browse top app bar: search + bookmarks icon buttons
   - [x] 5 new tests (bookmark toggle/list, note add/list/delete, flashcard + question search) — total 26 pass
-- **P6 — Stats / streak / heatmap** [ ]
+  - [x] PR #7 pushed
+
+- **P6 — Stats / streak / heatmap** [~]
+  - [x] `UserStateRepository`: `recordActivity(cards, questions, now)` upserts the `user_streak` day bucket; auto-called from `recordFlashcardRating` + `recordQuestionAttempt`
+  - [x] `streakStats({now})` computes current + longest consecutive-day streak; `activityHeatmap(days:90, now)` fills a complete grid with zero entries; `totals()` rollup of cards rated + total reviews + MCQ accuracy
+  - [x] Providers: `streakStatsProvider`, `activityHeatmapProvider`, `totalsSnapshotProvider`
+  - [x] `StatsScreen` rebuilt: gradient streak ring (uses current accent gradient), 3-chip totals row (Cards rated / Total reviews / MCQ accuracy), 13×7 heatmap with intensity-buckets + legend
+  - [x] 6 new tests (per-day accumulate, streak counting, no-activity zero state, heatmap window/fills, totals aggregation, activity-on-rating) — total 32 pass
 - **P7 — AI Settings + "Explain deeper" + "Why was I wrong?"** [ ]
 - **P8 — Daily Challenge + Quiz mock exam + Cheatsheet** [ ]
 - **P9 — Pomodoro + export certificate** [ ]
