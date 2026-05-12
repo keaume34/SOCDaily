@@ -73,15 +73,22 @@ Conventions:
 
 ## Phase progress
 
-- **P0 — Scaffold & memory bank** [~]
+- **P0 — Scaffold & memory bank** [x]
   - [x] Repo audit + plan
   - [x] Memory bank doc (this file)
   - [x] Flutter app scaffold under `app/`
   - [x] Architecture doc `ARCHITECTURE.md`
-  - [ ] Next.js admin scaffold under `admin/` (deferred to P10)
-  - [ ] Phase-0 PR pushed to GitHub
+  - [x] Phase-0 PR pushed to GitHub (#2)
 
-- **P1 — Theme + navigation shell + i18n + Settings** [ ]
+- **P1 — Theme + navigation shell + i18n + Settings** [~]
+  - [x] Custom Material 3 theme + monochrome gradient surfaces
+  - [x] `AppAccent` enum with 6 presets (graphite/azure/violet/crimson/forest/amber)
+  - [x] `GradientBackground` + `AccentChip` shared widgets
+  - [x] Bottom-nav shell via `StatefulShellRoute` (Home, Browse, Study, Stats, Settings)
+  - [x] Riverpod-backed `SettingsController` persisting `themeMode`, `accent`, `locale` via `shared_preferences`
+  - [x] Settings screen with theme picker + accent swatches + language picker
+  - [x] i18n via Flutter ARB (en default + vi); l10n.yaml config
+  - [x] Smoke widget test (`flutter test` + `flutter analyze` clean)
 - **P2 — Local SQLite (drift) + seed import + Browse** [ ]
 - **P3 — Flashcard flip + MCQ + explanation** [ ]
 - **P4 — SM-2 spaced repetition + Today queue** [ ]
