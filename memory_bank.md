@@ -158,7 +158,7 @@ Conventions:
   - [x] 5 new tests (daily determinism, day-over-day rotation, count clamping, random seed reproducibility, cheatsheet grouping) — total 43 pass
   - [x] PR #10 pushed
 
-- **P9 — Pomodoro + export certificate** [~]
+- **P9 — Pomodoro + export certificate** [x]
   - [x] `lib/src/features/pomodoro/pomodoro_controller.dart`: Riverpod `Notifier` for global timer state (`PomodoroPhase` idle/focus/shortBreak/longBreak, remaining seconds, running, completedFocus, configurable durations). Timer survives navigation because the controller lives at app scope. `start/pause/reset/skip/updateDurations` with `SharedPreferences` persistence of focus/short/long/cycles
   - [x] `lib/src/features/pomodoro/pomodoro_screen.dart` (`/pomodoro`): gradient progress ring rendered via `CustomPainter` (sweep gradient using current accent's deep + soft), phase chip, tabular-numeral countdown, focus-done counter, big play/pause + reset + skip controls, inline duration pickers via ChoiceChips
   - [x] `lib/src/services/certificate_service.dart`: builds an A4-landscape PDF certificate via the `pdf` package; header + name + 4 stat blocks (cards mastered / questions answered / longest streak / subjects studied) + issue-date footer + "SELF-PACED" badge
@@ -166,8 +166,19 @@ Conventions:
   - [x] Home dashboard: Pomodoro + Certificate cards added; routes wired in `router.dart`
   - [x] `pubspec.yaml`: added `pdf: ^3.11.1` + `printing: ^5.13.4`
   - [x] 9 new tests (7 pomodoro state machine: idle init, start, skip → break + completion count, long break every N cycles, reset, updateDurations persistence, progress bounds; 2 certificate: PDF magic-byte + zero-attempts handling) — total 52 pass
+  - [x] PR #11 pushed
 
-- **P10 — Admin web (Next.js)** [ ]
+- **P10 — Admin web (Next.js)** [~]
+  - [x] Next.js 14 App Router scaffold at `admin/` (TypeScript + Tailwind + Vitest, no shadcn CLI — hand-rolled components)
+  - [x] `admin/src/lib/content.ts`: file-backed data layer that reads/writes the JSON content bank under `app/assets/seed/` (same files the Flutter app bundles). Lazy `seedRootPath()` so `SOCDAILY_SEED_DIR` env can override
+  - [x] `admin/src/lib/auth.ts` + `/login`: optional cookie-based password gate. If `ADMIN_PASSWORD` unset → open mode (no auth, friction-free local dev)
+  - [x] Dashboard `/`: totals tiles (subjects, chapters, topics, flashcards, questions) + quick-link cards
+  - [x] Library `/library`: subject → chapter → topic tree with per-topic flashcard + question counts
+  - [x] Topic editor `/library/[subject]/[chapter]/[topic]`: full CRUD against the JSON file — edit topic title/summary, edit/delete each flashcard (front/back/hint/tags/difficulty/page), add new flashcard inline, edit/delete each question (stem/qtype/difficulty/explanation + per-option label/content/correct toggle). Sticky save bar with status
+  - [x] Pipeline `/pipeline`: documents the 4-step Python ETL pipeline (ingest → outline → generate → import) for users wanting new topics
+  - [x] Settings `/settings`: shows runtime config (seed dir, auth mode, Node version) + how-to-configure pointer
+  - [x] `admin/README.md`, `admin/.env.example`
+  - [x] 3 Vitest tests for the data layer (load library + totals, round-trip read/write, findTopicRef miss); `pnpm typecheck` + `pnpm lint` + `pnpm build` all green
 - **P11 — Sync 2-way via Supabase + pairing code** [ ]
 - **P12 — PDF source viewer (VPS-hosted)** [ ]
 
