@@ -101,14 +101,23 @@ Conventions:
   - [x] 4 drift schema tests + smoke widget test still passing
   - [x] PR #4 pushed
 
-- **P3 — Flashcard flip + MCQ + explanation** [~]
+- **P3 — Flashcard flip + MCQ + explanation** [x]
   - [x] `FlashcardView` widget: 3D Y-axis flip + tap-to-flip + swipe-to-next, optional hint surface, tag chips
   - [x] `McqView` widget: single/multiple/T-F, pre-submit selection state, post-submit correctness coloring + explanation card
   - [x] `StudySessionController` (AsyncNotifier family): loads all flashcards + MCQs for topic, walks index, tracks ratings + correctness, accuracy stat
   - [x] `TopicStudyScreen` full Phase-3 player: progress bar, exit button, flashcard rating row (Again/Hard/Good/Easy), MCQ submit/next, "Session complete" summary
   - [x] 4 session-controller tests against in-memory drift DB
-  - [x] All 9 tests pass
-- **P4 — SM-2 spaced repetition + Today queue** [ ]
+  - [x] PR #5 pushed
+
+- **P4 — SM-2 spaced repetition + Today queue** [~]
+  - [x] Pure SM-2 algorithm in `lib/src/features/study/sm2.dart` (Anki-style Again/Hard/Good/Easy → q0/q2/q4/q5)
+  - [x] `UserStateRepository` persists per-card `UserCardState` (ease/interval/nextReview/reviewCount/lastResult) + per-question `UserQuestionState` (attempts/correct/lastAttempt/lastChoice)
+  - [x] `dueFlashcards()` query: includes never-reviewed cards + cards with `nextReview <= now`
+  - [x] `dueCountsProvider`: total / new / due rollups for Home dashboard
+  - [x] `TodayReviewScreen` at `/study/today` — full-screen flashcard-only review queue
+  - [x] Home dashboard chips show real `Due / New` counts; "Start session" CTA routes to Today queue
+  - [x] `StudySessionController` writes SM-2 + MCQ state to DB on each grade/submit
+  - [x] 6 SM-2 progression tests + 6 user-state-repo tests + existing 9 still pass (total 21)
 - **P5 — Bookmarks + per-card notes + FTS search** [ ]
 - **P6 — Stats / streak / heatmap** [ ]
 - **P7 — AI Settings + "Explain deeper" + "Why was I wrong?"** [ ]

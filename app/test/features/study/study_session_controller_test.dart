@@ -84,7 +84,7 @@ void main() {
     final notifier =
         container.read(studySessionControllerProvider(topicId).notifier);
     await container.read(studySessionControllerProvider(topicId).future);
-    notifier.rateFlashcard(CardRating.good);
+    await notifier.rateFlashcard(CardRating.good);
     final state = container
         .read(studySessionControllerProvider(topicId))
         .requireValue;
@@ -98,9 +98,9 @@ void main() {
         container.read(studySessionControllerProvider(topicId).notifier);
     await container.read(studySessionControllerProvider(topicId).future);
 
-    notifier.rateFlashcard(CardRating.good); // jump to question
+    await notifier.rateFlashcard(CardRating.good); // jump to question
     notifier.toggleOption(correctOptionId, multiple: false);
-    notifier.submitQuestion();
+    await notifier.submitQuestion();
 
     var s = container
         .read(studySessionControllerProvider(topicId))
@@ -125,9 +125,9 @@ void main() {
     final wrongOptionId =
         q.options.firstWhere((o) => !o.isCorrect).id;
 
-    notifier.rateFlashcard(CardRating.again);
+    await notifier.rateFlashcard(CardRating.again);
     notifier.toggleOption(wrongOptionId, multiple: false);
-    notifier.submitQuestion();
+    await notifier.submitQuestion();
 
     final s = container
         .read(studySessionControllerProvider(topicId))

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/db/app_database.dart';
 import '../../data/db/content_repository.dart';
+import '../../data/db/user_state_repository.dart';
 
 /// One step in a study session — either a flashcard or an MCQ.
 sealed class StudyItem {
@@ -99,11 +100,13 @@ class StudySessionState {
 class StudySessionController
     extends AutoDisposeFamilyAsyncNotifier<StudySessionState, int> {
   late ContentRepository _repo;
+  late UserStateRepository _userRepo;
 
   @override
   Future<StudySessionState> build(int arg) async {
     final topicId = arg;
     _repo = ref.watch(contentRepositoryProvider);
+    _userRepo = ref.watch(userStateRepositoryProvider);
     final cards = await _repo.listFlashcardsForTopic(topicId);
     final questions = await _repo.listQuestionsForTopic(topicId);
     final items = <StudyItem>[
@@ -130,7 +133,7 @@ class StudySessionController
     state = AsyncData(cur.copyWith(selectedOptions: next));
   }
 
-  void submitQuestion() {
+  Future<void> submitQuestion() async {
     final cur = state.valueOrNull;
     if (cur == null) return;
     final item = cur.current;
@@ -139,6 +142,12 @@ class StudySessionController
         item.options.where((o) => o.isCorrect).map((o) => o.id).toSet();
     final wasCorrect = correctIds.length == cur.selectedOptions.length &&
         correctIds.containsAll(cur.selectedOptions);
+    final choice = cur.selectedOptions.toList()..sort();
+    await _userRepo.recordQuestionAttempt(
+      item.question.id,
+      wasCorrect: wasCorrect,
+      choice: choice.join(','),
+    );
     state = AsyncData(cur.copyWith(
       submitted: true,
       questionResults: {
@@ -148,11 +157,12 @@ class StudySessionController
     ));
   }
 
-  void rateFlashcard(CardRating rating) {
+  Future<void> rateFlashcard(CardRating rating) async {
     final cur = state.valueOrNull;
     if (cur == null) return;
     final item = cur.current;
     if (item is! FlashcardItem) return;
+    await _userRepo.recordFlashcardRating(item.card.id, rating);
     state = AsyncData(cur.copyWith(
       flashcardRatings: {
         ...cur.flashcardRatings,
