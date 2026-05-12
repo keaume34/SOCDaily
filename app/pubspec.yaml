@@ -54,4 +54,7 @@ flutter:
   generate: true
   assets:
     - assets/seed/
+    - assets/seed/soc-fundamentals/introduction/
+    - assets/seed/soc-fundamentals/siem/
+    - assets/seed/blue-team/phishing/
     - assets/i18n/

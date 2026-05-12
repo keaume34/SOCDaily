@@ -1,0 +1,82 @@
+{
+  "subject_code": "soc-fundamentals",
+  "subject_title": "SOC Fundamentals",
+  "chapter_code": "siem",
+  "chapter_title": "SIEM Foundations",
+  "topic_code": "siem-core-concepts",
+  "topic_title": "What a SIEM Actually Does",
+  "topic_summary": "Aggregation, normalization, correlation, and alerting — the four jobs every SIEM shares.",
+  "source_pdf": "SIEM for Beginners.pdf",
+  "flashcards": [
+    {
+      "front": "Name the four core functions of a SIEM.",
+      "back": "1) Log aggregation, 2) normalization, 3) correlation, 4) alerting (with optional response/case management).",
+      "difficulty": "easy",
+      "tags": ["siem"],
+      "source_page": 10
+    },
+    {
+      "front": "What is log normalization?",
+      "back": "Translating raw logs from many vendors into a common schema (CIM/ECS/etc.) so downstream queries don't care about the source format.",
+      "difficulty": "medium",
+      "tags": ["siem", "normalization"],
+      "source_page": 12
+    },
+    {
+      "front": "What is correlation in a SIEM?",
+      "back": "Combining multiple events across sources/time into a single higher-fidelity signal (e.g., failed-logins + new-process + outbound-c2 = lateral-movement alert).",
+      "difficulty": "medium",
+      "tags": ["siem", "correlation"],
+      "source_page": 14
+    },
+    {
+      "front": "Give one trade-off of high-cardinality fields in a SIEM.",
+      "back": "Great for investigation pivots, but expensive to index and aggregate — drives storage/license cost up.",
+      "difficulty": "hard",
+      "tags": ["siem", "cost"],
+      "source_page": 18
+    }
+  ],
+  "questions": [
+    {
+      "qtype": "single",
+      "stem": "Which SIEM function is most directly responsible for reducing analyst toil from vendor-specific log formats?",
+      "options": [
+        {"label": "A", "content": "Aggregation", "is_correct": false},
+        {"label": "B", "content": "Normalization", "is_correct": true},
+        {"label": "C", "content": "Correlation", "is_correct": false},
+        {"label": "D", "content": "Alerting", "is_correct": false}
+      ],
+      "explanation": "Normalization maps vendor fields to a common schema, so analysts write queries against one model.",
+      "difficulty": "easy",
+      "tags": ["siem"],
+      "source_page": 12
+    },
+    {
+      "qtype": "single",
+      "stem": "You combine three lower-fidelity rules into a single higher-fidelity alert. What SIEM concept is this?",
+      "options": [
+        {"label": "A", "content": "Aggregation", "is_correct": false},
+        {"label": "B", "content": "Correlation", "is_correct": true},
+        {"label": "C", "content": "Enrichment", "is_correct": false},
+        {"label": "D", "content": "Throttling", "is_correct": false}
+      ],
+      "explanation": "Correlation links multiple events into a single signal — the textbook 'failed-login + new-process + c2-beacon' chain.",
+      "difficulty": "medium",
+      "tags": ["siem", "correlation"],
+      "source_page": 14
+    },
+    {
+      "qtype": "truefalse",
+      "stem": "True or false: a SIEM with no normalization can still do effective cross-source correlation.",
+      "options": [
+        {"label": "A", "content": "True", "is_correct": false},
+        {"label": "B", "content": "False", "is_correct": true}
+      ],
+      "explanation": "Without normalization the SIEM cannot reliably join fields across vendors — correlation collapses to per-source patterns.",
+      "difficulty": "medium",
+      "tags": ["siem", "normalization"],
+      "source_page": 13
+    }
+  ]
+}

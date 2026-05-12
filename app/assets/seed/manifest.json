@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "generated_at": "2026-05-12",
+  "subjects": [
+    {
+      "code": "soc-fundamentals",
+      "title": "SOC Fundamentals",
+      "description": "What every SOC analyst should know before touching a console.",
+      "order_index": 0,
+      "chapters": [
+        {
+          "code": "introduction",
+          "title": "Introduction to a SOC",
+          "order_index": 0,
+          "topics": [
+            { "code": "soc-tier-roles", "order_index": 0 },
+            { "code": "soc-mission", "order_index": 1 }
+          ]
+        },
+        {
+          "code": "siem",
+          "title": "SIEM Foundations",
+          "order_index": 1,
+          "topics": [
+            { "code": "siem-core-concepts", "order_index": 0 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "blue-team",
+      "title": "Blue Team Operations",
+      "description": "Defender-side hands-on material for L1/L2 analysts.",
+      "order_index": 1,
+      "chapters": [
+        {
+          "code": "phishing",
+          "title": "Phishing Triage",
+          "order_index": 0,
+          "topics": [
+            { "code": "phishing-indicators", "order_index": 0 }
+          ]
+        }
+      ]
+    }
+  ],
+  "topics": [
+    { "subject_code": "soc-fundamentals", "chapter_code": "introduction", "topic_code": "soc-tier-roles", "file": "soc-fundamentals/introduction/soc-tier-roles.json" },
+    { "subject_code": "soc-fundamentals", "chapter_code": "introduction", "topic_code": "soc-mission", "file": "soc-fundamentals/introduction/soc-mission.json" },
+    { "subject_code": "soc-fundamentals", "chapter_code": "siem", "topic_code": "siem-core-concepts", "file": "soc-fundamentals/siem/siem-core-concepts.json" },
+    { "subject_code": "blue-team", "chapter_code": "phishing", "topic_code": "phishing-indicators", "file": "blue-team/phishing/phishing-indicators.json" }
+  ]
+}

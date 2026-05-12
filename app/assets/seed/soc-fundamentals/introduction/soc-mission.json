@@ -1,0 +1,91 @@
+{
+  "subject_code": "soc-fundamentals",
+  "subject_title": "SOC Fundamentals",
+  "chapter_code": "introduction",
+  "chapter_title": "Introduction to a SOC",
+  "topic_code": "soc-mission",
+  "topic_title": "Mission, Scope, and KPIs of a SOC",
+  "topic_summary": "What a SOC actually delivers to the business and how its effectiveness is measured.",
+  "source_pdf": "SOC Analyst Guide.pdf",
+  "flashcards": [
+    {
+      "front": "State the SOC mission in one sentence.",
+      "back": "Continuously detect, analyze, and respond to cybersecurity events that threaten the organization's assets and operations.",
+      "difficulty": "easy",
+      "tags": ["soc", "mission"],
+      "source_page": 1
+    },
+    {
+      "front": "Define MTTD.",
+      "back": "Mean Time To Detect — the average elapsed time between an incident's onset and the SOC noticing it.",
+      "difficulty": "easy",
+      "tags": ["kpi", "metrics"],
+      "source_page": 2
+    },
+    {
+      "front": "Define MTTR (in a SOC context).",
+      "back": "Mean Time To Respond — average elapsed time between detection and the start of effective response actions.",
+      "difficulty": "easy",
+      "tags": ["kpi", "metrics"],
+      "source_page": 2
+    },
+    {
+      "front": "Why is alert volume a *misleading* KPI on its own?",
+      "back": "High volume can simply mean noisy rules; without precision/recall context it doesn't measure security outcomes.",
+      "difficulty": "medium",
+      "tags": ["kpi", "tuning"],
+      "source_page": 3
+    },
+    {
+      "front": "What's the difference between in-house and outsourced (MSSP) SOCs in two bullet points?",
+      "back": "In-house: full context, slower to staff, expensive. MSSP: faster to spin up and 24×7 coverage, but limited business context and shared analysts.",
+      "difficulty": "medium",
+      "tags": ["soc", "operating-model"],
+      "source_page": 4
+    }
+  ],
+  "questions": [
+    {
+      "qtype": "single",
+      "stem": "Which metric most directly reflects how quickly a SOC notices that something is wrong?",
+      "options": [
+        {"label": "A", "content": "MTTR", "is_correct": false},
+        {"label": "B", "content": "MTTD", "is_correct": true},
+        {"label": "C", "content": "False-positive rate", "is_correct": false},
+        {"label": "D", "content": "Alert volume", "is_correct": false}
+      ],
+      "explanation": "MTTD measures time from incident start to detection. MTTR measures time from detection to response.",
+      "difficulty": "easy",
+      "tags": ["kpi"],
+      "source_page": 2
+    },
+    {
+      "qtype": "single",
+      "stem": "A SOC reports 'alert volume rose 300% this quarter.' What is the single most important follow-up question?",
+      "options": [
+        {"label": "A", "content": "How many of those were true positives?", "is_correct": true},
+        {"label": "B", "content": "How many analysts do we have?", "is_correct": false},
+        {"label": "C", "content": "What SIEM are we using?", "is_correct": false},
+        {"label": "D", "content": "What is our compliance budget?", "is_correct": false}
+      ],
+      "explanation": "Without the true-positive ratio, alert volume tells you about noise, not security posture.",
+      "difficulty": "medium",
+      "tags": ["kpi", "tuning"],
+      "source_page": 3
+    },
+    {
+      "qtype": "multiple",
+      "stem": "Pick two reasons an organization might choose an MSSP over building in-house.",
+      "options": [
+        {"label": "A", "content": "Faster initial 24×7 coverage", "is_correct": true},
+        {"label": "B", "content": "Lower per-analyst cost at small scale", "is_correct": true},
+        {"label": "C", "content": "Deeper context about the business", "is_correct": false},
+        {"label": "D", "content": "Full control over detection content", "is_correct": false}
+      ],
+      "explanation": "MSSPs win on time-to-coverage and shared cost. In-house SOCs retain context and detection-content ownership.",
+      "difficulty": "medium",
+      "tags": ["operating-model"],
+      "source_page": 4
+    }
+  ]
+}
