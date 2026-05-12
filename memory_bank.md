@@ -196,7 +196,38 @@ Conventions:
   - [x] `pubspec.yaml`: added `supabase_flutter: ^2.8.0`
   - [x] 15 new tests (8 `in_memory_sync_remote_test`: pairing happy path, redeem unknown code, redeem rejects 3rd device, redeem refuses expired pair, payload filter by device, last-write-wins, since filter; 3 `sync_engine_test`: card state propagates between two devices, conflict resolves via newer updated_at, bookmarks propagate; 6 `sync_controller_test`: initial idle, unconfigured fallback, generate, redeem unknown, unpair, two-container end-to-end sync) — total 67 pass
   - [x] `flutter analyze` clean
-- **P12 — PDF source viewer (VPS-hosted)** [ ]
+- **P12 — PDF source viewer (VPS-hosted)** [~ PAUSED — VPS side done, Flutter side TODO]
+  - **VPS side (DONE)**
+    - [x] User authorized Devin's VM onto their Tailscale tailnet via login link (no auth-key needed). Devin VM hostname: `devin-socdaily` (`100.82.82.92`).
+    - [x] SSH passwordless via Tailscale SSH to `ubuntu@100.110.125.8` (a.k.a. `neam-vps`, Ubuntu 24.04, 37 GB free).
+    - [x] Devin VM SSH key fingerprint added to known_hosts: `~/.ssh/id_ed25519` (also pubkey copied to VPS via Tailscale SSH — zero-config).
+    - [x] `nginx 1.24.0` installed on VPS.
+    - [x] `/var/www/socdaily-pdfs/` created, owned by `ubuntu:ubuntu`.
+    - [x] `/etc/nginx/sites-available/socdaily-pdfs` server block: listens on `100.110.125.8:8080` (tailnet IP only — not exposed publicly). Serves `*.pdf` with `Content-Type: application/pdf`, `Accept-Ranges: bytes`, `Cache-Control: public, max-age=2592000, immutable`, `Access-Control-Allow-Origin: *`. Has `/healthz` returning `ok` and `autoindex on; autoindex_format json;` for directory listings.
+    - [x] 4 sample PDFs (3 pages each, generated via `reportlab`) uploaded to validate end-to-end serving:
+      - `soc-fundamentals/introduction/soc-mission.pdf`
+      - `soc-fundamentals/introduction/soc-tier-roles.pdf`
+      - `soc-fundamentals/siem/siem-core-concepts.pdf`
+      - `blue-team/phishing/phishing-indicators.pdf`
+    - [x] Verified: `curl -sI http://100.110.125.8:8080/soc-fundamentals/introduction/soc-mission.pdf` returns 200 + correct headers. Byte-range request returns valid `%PDF-1.3` magic.
+  - **Flutter side (TODO — do this in the next session)**
+    - [ ] Add a `--dart-define=PDF_BASE_URL=http://100.110.125.8:8080` build flag (and surface a `PdfSourceConfig.fromEnvironment` similar to `SyncConfig`).
+    - [ ] `lib/src/pdf/pdf_source_service.dart`: takes (`Sources.pdf_path`, page) → absolute URL. `pdf_path` in seed JSON today is a raw filename like "SOC Analyst Guide.pdf" — the service should slugify (lowercase + spaces → dashes) and prepend the topic's subject + chapter codes when the path doesn't already contain slashes. Sample PDFs on the VPS already follow that pattern.
+    - [ ] Wire a tiny disk cache: `~/Documents/socdaily/pdf_cache/<sha1(url)>.pdf`, 30-day TTL. Use existing `dio` for download. (Do **not** add `flutter_cache_manager` — keep the dep list lean.)
+    - [ ] `lib/src/features/pdf/pdf_viewer_screen.dart` (`/source/:sourceId?page=N`): use the **existing** `printing` package's `PdfPreview` (already in pubspec for P9 certificate) with a `build: (format) async => bytes` lambda. Pass `initialPageFormat`/initial page via the printing API (or fall back to `pdfx` if `printing` can't open at a specific page — verify first).
+    - [ ] Add an "Open source page" button on the flashcard player and MCQ result panel whenever `sourceId != null` AND `PdfSourceConfig.isConfigured`. Hide otherwise.
+    - [ ] 2-3 tests: URL builder (`pdf_source_service_test.dart`), cache-key determinism, slugification edge cases.
+    - [ ] Update PR template + `memory_bank.md` row to `[x]` and open PR #14 based on the P11 branch.
+  - **Operational notes for next session**
+    - The user gave their Tailscale login link via interactive `tailscale up` (not via `TS_AUTHKEY`). If the VM image is rebuilt fresh, the new VM has to re-auth: `sudo tailscale up --hostname=devin-socdaily --accept-routes --accept-dns=false` and the user clicks the printed URL.
+    - Tailscale MagicDNS is **off** on the user's tailnet — use the bare IP `100.110.125.8` (not `neam-vps`).
+    - To push more PDFs from the repo's `raw/pdf/` into the VPS:
+      ```
+      tar -C raw/pdf -czf /tmp/pdfs.tar.gz .
+      scp /tmp/pdfs.tar.gz ubuntu@100.110.125.8:/tmp/
+      ssh ubuntu@100.110.125.8 "tar xzf /tmp/pdfs.tar.gz -C /var/www/socdaily-pdfs"
+      ```
+    - PDFs are kept *off* git per the repo's existing `.gitignore` (copyrighted study material). The VPS folder is the source of truth.
 
 ---
 
@@ -207,7 +238,7 @@ Conventions:
    Anon URL/key are embedded into release builds via `--dart-define`.
    The service-role key is *only* used by the admin-web seed-push script,
    never by the Flutter app.
-2. VPS SSH / domain needed before P12 — will request when the phase starts.
+2. P12 VPS side is live (`http://100.110.125.8:8080` on the Tailscale tailnet, see the P12 row above). Flutter PDF viewer screen still TODO.
 3. AI key strategy: the app expects each user to supply their own OpenAI /
    Anthropic key in Settings. No shared key ships with the app.
 
