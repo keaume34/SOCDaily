@@ -138,7 +138,7 @@ Conventions:
   - [x] 6 new tests (per-day accumulate, streak counting, no-activity zero state, heatmap window/fills, totals aggregation, activity-on-rating) — total 32 pass
   - [x] PR #8 pushed
 
-- **P7 — AI Settings + "Explain deeper" + "Why was I wrong?"** [~]
+- **P7 — AI Settings + "Explain deeper" + "Why was I wrong?"** [x]
   - [x] `lib/src/ai/llm_client.dart`: provider-agnostic `LlmClient` interface + `OpenAICompatClient` (chat/completions) + `AnthropicClient` (messages API) — mirrors Python pipeline pattern
   - [x] `lib/src/ai/ai_settings.dart`: `AiSettings` (provider/baseUrl/apiKey/model) persisted via SharedPreferences; `aiSettingsControllerProvider` + `llmClientProvider`
   - [x] `lib/src/ai/tutor_service.dart`: `TutorService.explainDeeper(card, topic)` + `TutorService.whyWrong(question, options, chosenIds)` — both emit structured SOC-tutor prompts with no-hallucination guardrails
@@ -146,7 +146,16 @@ Conventions:
   - [x] Settings screen: "AI tutor" section with provider segmented button, base URL (OpenAI-compat only), model, masked API key with show/clear; status row indicates "Configured" / "Not configured"
   - [x] Study screen: "Explain deeper" outlined button under every flashcard; "Why was I wrong?" appears after submitting an MCQ that scored 0
   - [x] 6 new tests (configured-check, provider name fallback, explainDeeper prompt assembly, whyWrong prompt + chosen vs correct, exception propagation, schema sanity) — total 38 pass
-- **P8 — Daily Challenge + Quiz mock exam + Cheatsheet** [ ]
+  - [x] PR #9 pushed
+
+- **P8 — Daily Challenge + Quiz mock exam + Cheatsheet** [~]
+  - [x] `ContentRepository.dailyChallenge({day, flashcardCount, questionCount})`: seeded Fisher-Yates (`yyyymmdd`) → same picks across devices, day-over-day rotation
+  - [x] `ContentRepository.randomQuestions(count, {seed})` for the timed mock exam; `cheatsheetForSubject(subjectId)` rolls up flashcards by topic
+  - [x] `DailyChallengeScreen` (`/daily`): mixed flashcards + MCQs, real Rating buttons (records SM-2 + activity), summary card on completion
+  - [x] `QuizSetupScreen` + `QuizRunScreen` (`/quiz`, `/quiz/run?count=…&minutes=…`): choose 5/10/20/30 questions × 5/10/15/30 min, countdown chip turning red below 1 min, auto-submit on timeout, per-question recap + correct/wrong icons + explanation
+  - [x] `CheatsheetSubjectPickerScreen` + `CheatsheetScreen` (`/cheatsheet`, `/cheatsheet/:id`): table-style Term / Definition rendering for fast scanning before an exam
+  - [x] Home dashboard: Daily Challenge / Mock exam / Cheatsheet cards added next to Today queue and Browse
+  - [x] 5 new tests (daily determinism, day-over-day rotation, count clamping, random seed reproducibility, cheatsheet grouping) — total 43 pass
 - **P9 — Pomodoro + export certificate** [ ]
 - **P10 — Admin web (Next.js)** [ ]
 - **P11 — Sync 2-way via Supabase + pairing code** [ ]

@@ -6,8 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/browse/browse_screen.dart';
+import '../features/cheatsheet/cheatsheet_screen.dart';
+import '../features/daily/daily_challenge_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/bookmarks_screen.dart';
+import '../features/quiz/quiz_screen.dart';
 import '../features/search/search_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
@@ -49,6 +52,35 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/study/topic/:id',
         builder: (context, state) => TopicStudyScreen(
           topicId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/daily',
+        builder: (context, state) => const DailyChallengeScreen(),
+      ),
+      GoRoute(
+        path: '/quiz',
+        builder: (context, state) => const QuizSetupScreen(),
+      ),
+      GoRoute(
+        path: '/quiz/run',
+        builder: (context, state) {
+          final count =
+              int.tryParse(state.uri.queryParameters['count'] ?? '') ?? 10;
+          final minutes =
+              int.tryParse(state.uri.queryParameters['minutes'] ?? '') ?? 10;
+          return QuizRunScreen(count: count, minutes: minutes);
+        },
+      ),
+      GoRoute(
+        path: '/cheatsheet',
+        builder: (context, state) =>
+            const CheatsheetSubjectPickerScreen(),
+      ),
+      GoRoute(
+        path: '/cheatsheet/:id',
+        builder: (context, state) => CheatsheetScreen(
+          subjectId: int.parse(state.pathParameters['id']!),
         ),
       ),
       StatefulShellRoute.indexedStack(
