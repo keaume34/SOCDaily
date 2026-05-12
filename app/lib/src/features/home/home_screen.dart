@@ -115,6 +115,20 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   _DashCard(
+                    icon: Icons.av_timer,
+                    title: 'Pomodoro',
+                    subtitle: 'Focus / break cycles while you study.',
+                    onTap: () => context.push('/pomodoro'),
+                  ),
+                  const SizedBox(height: 12),
+                  _DashCard(
+                    icon: Icons.workspace_premium_outlined,
+                    title: 'Certificate',
+                    subtitle: 'Generate a printable study certificate.',
+                    onTap: () => context.push('/certificate'),
+                  ),
+                  const SizedBox(height: 12),
+                  _DashCard(
                     icon: Icons.menu_book,
                     title: l10n.homeBrowse,
                     subtitle: l10n.homeBrowseSubtitle,

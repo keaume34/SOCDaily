@@ -39,6 +39,10 @@ dependencies:
   fl_chart: ^0.69.0
   flutter_markdown: ^0.7.4
 
+  # PDF certificate (P9)
+  pdf: ^3.11.1
+  printing: ^5.13.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

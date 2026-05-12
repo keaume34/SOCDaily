@@ -6,10 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/browse/browse_screen.dart';
+import '../features/certificate/certificate_screen.dart';
 import '../features/cheatsheet/cheatsheet_screen.dart';
 import '../features/daily/daily_challenge_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/bookmarks_screen.dart';
+import '../features/pomodoro/pomodoro_screen.dart';
 import '../features/quiz/quiz_screen.dart';
 import '../features/search/search_screen.dart';
 import '../features/settings/settings_screen.dart';
@@ -82,6 +84,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => CheatsheetScreen(
           subjectId: int.parse(state.pathParameters['id']!),
         ),
+      ),
+      GoRoute(
+        path: '/pomodoro',
+        builder: (context, state) => const PomodoroScreen(),
+      ),
+      GoRoute(
+        path: '/certificate',
+        builder: (context, state) => const CertificateScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => AppShell(
