@@ -47,6 +47,9 @@ dependencies:
   # Cloud sync (P11)
   supabase_flutter: ^2.8.0
 
+  # SVG mascot (P13.C)
+  flutter_svg: ^2.0.10+1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -66,6 +69,7 @@ flutter:
     - assets/seed/soc-fundamentals/siem/
     - assets/seed/blue-team/phishing/
     - assets/i18n/
+    - assets/mascot/
   fonts:
     - family: Quicksand
       fonts:

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/db/user_state_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../../mascot/mascot_widget.dart';
 import '../../theme/app_accent.dart';
 import '../../theme/gradient_background.dart';
 import '../settings/settings_controller.dart';
@@ -40,11 +41,13 @@ class StatsScreen extends ConsumerWidget {
                     loading: () =>
                         const LinearProgressIndicator(minHeight: 2),
                     error: (e, st) => Text('$e'),
-                    data: (s) => _StreakCard(
-                      current: s.current,
-                      longest: s.longest,
-                      accent: settings.accent,
-                    ),
+                    data: (s) => s.current == 0 && s.longest == 0
+                        ? const _EmptyStatsCard()
+                        : _StreakCard(
+                            current: s.current,
+                            longest: s.longest,
+                            accent: settings.accent,
+                          ),
                   ),
                   const SizedBox(height: 16),
                   totals.when(
@@ -346,6 +349,38 @@ class _Cell extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(3),
+      ),
+    );
+  }
+}
+
+class _EmptyStatsCard extends StatelessWidget {
+  const _EmptyStatsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+        child: Column(
+          children: [
+            const MascotWidget(mood: OttoMood.sleeping, size: 100),
+            const SizedBox(height: 16),
+            Text(
+              'No stats yet',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Start a study session to build your streak!',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

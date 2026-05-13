@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/db/user_state_repository.dart';
 import '../../data/seed/seed_bootstrap.dart';
 import '../../l10n/app_localizations.dart';
+import '../../mascot/mascot_widget.dart';
 import '../../theme/gradient_background.dart';
 import '../settings/settings_controller.dart';
 
@@ -34,16 +35,29 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.homeGreeting,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.appName,
-                      style: theme.textTheme.displayMedium,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.homeGreeting,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l10n.appName,
+                                style: theme.textTheme.displayMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const MascotWidget(mood: OttoMood.neutral, size: 64),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     seed.when(
