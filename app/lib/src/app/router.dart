@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/browse/browse_screen.dart';
+import '../features/onboarding/onboarding_screen.dart';
 import '../features/certificate/certificate_screen.dart';
 import '../features/cheatsheet/cheatsheet_screen.dart';
 import '../features/daily/daily_challenge_screen.dart';
@@ -25,9 +26,14 @@ import '../l10n/app_localizations.dart';
 import '../widgets/app_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
+  final onboardingDone = ref.watch(onboardingCompleteProvider);
   return GoRouter(
-    initialLocation: '/home',
+    initialLocation: onboardingDone ? '/home' : '/onboarding',
     routes: [
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       GoRoute(
         path: '/browse/subject/:id',
         builder: (context, state) => SubjectDetailScreen(

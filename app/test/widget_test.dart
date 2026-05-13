@@ -12,7 +12,7 @@ import 'package:socdaily_app/src/features/settings/settings_controller.dart';
 void main() {
   testWidgets('SocDailyApp boots and shows bottom navigation',
       (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({'onboarding.complete': true});
     final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(
       ProviderScope(

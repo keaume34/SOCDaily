@@ -275,9 +275,32 @@ Conventions:
   - [x] `flutter analyze` clean (only pre-existing `assets/i18n/` warning).
     `flutter test` — **84 / 84 pass** (no regressions).
   - **Operational note**: Flutter SDK lives at `/home/ubuntu/flutter/` on
-    the VM. `~/.bashrc` exports `$HOME/flutter/bin` onto `PATH`. The
-    blueprint should be updated in a later phase to make this permanent
-    for future sessions.
+    the VM. `~/.bashrc` exports `$HOME/flutter/bin` onto `PATH`. Blueprint
+    updated — snapshot now pre-installs Flutter 3.24.5.
+
+- [x] **P13.C — Vector mascot + onboarding** (branch: `devin/<ts>-phase13c-mascot-onboarding`)
+  - [x] Created **Otto the Sentinel Owl** SVG mascot — 4 mood variants in
+    `app/assets/mascot/`: `otto_neutral.svg`, `otto_correct.svg` (sparkles +
+    thumbs-up), `otto_wrong.svg` (squint + ?), `otto_sleeping.svg`
+    (nightcap + zzz). Round owl body, big eyes, black-framed glasses,
+    grey hoodie, blue "SOC" badge.
+  - [x] Added `flutter_svg ^2.0.10+1` dependency. Created `MascotWidget`
+    (`lib/src/mascot/mascot_widget.dart`) with `OttoMood` enum exposing
+    4 states. Accepts `size` parameter, renders via `SvgPicture.asset`.
+  - [x] 3-step **OnboardingScreen** (`lib/src/features/onboarding/`):
+    pages introduce Otto ("Meet Otto", "Learn by doing", "Study at your
+    pace"). Page dots + Skip / Next / Get started buttons. Persists
+    `onboarding.complete` in SharedPreferences; `onboardingCompleteProvider`
+    controls initial route.
+  - [x] Home greeting now shows Otto neutral (64px) beside the title.
+    Stats screen shows `_EmptyStatsCard` with sleeping Otto when
+    `current == 0 && longest == 0`.
+  - [x] Existing `widget_test.dart` updated to seed `onboarding.complete:
+    true` so the smoke test still finds `NavigationBar`.
+  - [x] 3 new unit tests for the onboarding flag (absent → shows,
+    present → skips, set → persists).
+  - [x] `flutter analyze` clean (only pre-existing `assets/i18n/`).
+    `flutter test` — **87 / 87 pass** (84 original + 3 new).
 
 ---
 
