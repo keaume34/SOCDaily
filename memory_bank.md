@@ -248,8 +248,32 @@ Conventions:
     spec, mascot proposal (A: Sentinel Owl / B: Sherlock Magnifier /
     C: Shield Bunny — em đề xuất B), and the P13.A → P13.E sub-phase
     plan with acceptance criteria each.
-  - [ ] User picks mascot direction + bundling preference + onboarding
+  - [x] User picks mascot direction + bundling preference + onboarding
     preference before P13.B starts.
+    → **Otto the Sentinel Owl** chosen. Keep 9 accents. 3-step onboarding.
+    Bundle fonts offline (no `google_fonts` runtime download).
+
+- [x] **P13.B — Theme refinements** (branch: `devin/<ts>-phase13b-theme-refinements`)
+  - [x] Bundled **Quicksand** (variable-weight TTF) + **Plus Jakarta Sans**
+    (variable-weight TTF + italic) into `app/assets/fonts/`, with OFL
+    license files. Declared in `pubspec.yaml` under `flutter.fonts`.
+    No `google_fonts` package — fully offline.
+  - [x] Added 3 pastel accents to `AppAccent` enum: `sakura` (`#DB2777` /
+    `#FCE7F3`), `mint` (`#0F766E` / `#CCFBF1`), `mocha` (`#92400E` /
+    `#FEF3C7`). Static lists `AppAccent.professional` (6) and
+    `AppAccent.friendly` (3) for the settings picker.
+  - [x] Settings accent picker split into two labelled groups:
+    **Professional** (graphite, azure, violet, crimson, forest, amber) and
+    **Friendly** (sakura, mint, mocha).
+  - [x] Card radius bumped `20 → 22`. Button radius bumped `14 → 16`
+    (filled, outlined, input decoration). Navigation bar indicator now
+    uses `accent.soft × 70%` fill + 1px `accent.deep` border for a
+    clearly visible active state.
+  - [x] Typography split: headlines / displays / titles use **Quicksand**;
+    body / labels use **Plus Jakarta Sans**. AppBar title also uses
+    Quicksand.
+  - [x] `flutter analyze` clean (only pre-existing `assets/i18n/` warning).
+    `flutter test` — **84 / 84 pass** (no regressions).
   - **Operational note**: Flutter SDK lives at `/home/ubuntu/flutter/` on
     the VM. `~/.bashrc` exports `$HOME/flutter/bin` onto `PATH`. The
     blueprint should be updated in a later phase to make this permanent

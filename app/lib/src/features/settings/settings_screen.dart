@@ -168,6 +168,7 @@ class _AccentPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -176,21 +177,38 @@ class _AccentPicker extends StatelessWidget {
           children: [
             Text(
               l10n.settingsAccent,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 4),
             Text(
               l10n.settingsAccentSubtitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+              style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
             ),
             const SizedBox(height: 12),
+            const _AccentGroupLabel(label: 'Professional'),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 12,
               runSpacing: 12,
               children: [
-                for (final accent in AppAccent.values)
+                for (final accent in AppAccent.professional)
+                  _AccentSwatch(
+                    accent: accent,
+                    selected: accent == current,
+                    onTap: () => onChanged(accent),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const _AccentGroupLabel(label: 'Friendly'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (final accent in AppAccent.friendly)
                   _AccentSwatch(
                     accent: accent,
                     selected: accent == current,
@@ -201,6 +219,22 @@ class _AccentPicker extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AccentGroupLabel extends StatelessWidget {
+  const _AccentGroupLabel({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            letterSpacing: 0.6,
+          ),
     );
   }
 }
