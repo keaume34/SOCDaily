@@ -230,6 +230,31 @@ Conventions:
     - The current sample PDFs on the VPS are named after the *topic_code* (`<subject>/<chapter>/<topic-code>.pdf`).
     - **Resolved**: the 4 bundled seed JSONs (`phishing-indicators`, `siem-core-concepts`, `soc-mission`, `soc-tier-roles`) now use `source_pdf: "<topic-code>.pdf"` so `buildRelativePath` resolves straight to the on-disk path. When the user adds new seeds later, keep `source_pdf` aligned with the actual VPS filename — the convention is `<topic-code>.pdf` namespaced by `<subject>/<chapter>/` (which the lookup adds automatically). To wire up a brand new human-named PDF instead, re-upload it to the VPS at the slugified path the app computes (`slugifyPdfFilename` lowercases + dashes the name).
 
+- [x] **P13.A — Design audit & language doc** (branch: `devin/<ts>-phase13a-design-audit`)
+  - [x] Install Flutter SDK 3.24.5 on the VM + the Linux desktop toolchain
+    (`clang`, `cmake`, `ninja-build`, `pkg-config`, `libgtk-3-dev`,
+    `liblzma-dev`, `wmctrl`). Web target *does not work* for this app
+    because `sqlite3_flutter_libs` is FFI-only — use Linux desktop or
+    Android for visual smoke tests.
+  - [x] `flutter test` re-run on the VM after install — **84 / 84 pass**.
+  - [x] Capture 20 screenshots covering Home (light + dark), Browse
+    (subject / chapter / topic), Study (flashcard front + back + MCQ +
+    answered), Stats, Settings (incl. dark), Pomodoro, Daily Challenge,
+    Mock Exam, Cheatsheet (list + table), Certificate. Saved to
+    `/home/ubuntu/screenshots/p13a_audit/` (kept local — not committed).
+  - [x] Author `DESIGN.md` at repo root: "Cute Sentinel" design language,
+    palette (3 new pastel accents on top of existing 6), typography
+    (Quicksand + Plus Jakarta Sans), shape / elevation rules, motion
+    spec, mascot proposal (A: Sentinel Owl / B: Sherlock Magnifier /
+    C: Shield Bunny — em đề xuất B), and the P13.A → P13.E sub-phase
+    plan with acceptance criteria each.
+  - [ ] User picks mascot direction + bundling preference + onboarding
+    preference before P13.B starts.
+  - **Operational note**: Flutter SDK lives at `/home/ubuntu/flutter/` on
+    the VM. `~/.bashrc` exports `$HOME/flutter/bin` onto `PATH`. The
+    blueprint should be updated in a later phase to make this permanent
+    for future sessions.
+
 ---
 
 ## Open questions / blockers
