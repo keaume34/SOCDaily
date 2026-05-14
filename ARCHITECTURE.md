@@ -70,6 +70,39 @@ PDF viewing:
 app  ──HTTPS──▶  https://<user-vps>/pdfs/<category>/<filename>.pdf#page=<n>
 ```
 
+On-demand content generation (P14, planned):
+
+```
+app  ──POST /generate──▶  FastAPI wrapper on VPS
+                              │
+                              └─ reuses src/socdaily generate (LLM pipeline)
+                                       │
+                                       ▼
+                              TopicSeed JSON (matches app/assets/seed/*.json)
+                                       │
+                              ◀─── HTTP response ───
+                              │
+app  ── SeedImporter ──▶ local SQLite (immediate availability)
+                              │
+                              └ optional: persist under
+                                  assets/seed/generated/<date>/<topic>.json
+```
+
+Weakness-driven recommendation flow:
+
+```
+user_question_state + user_card_state
+        │
+        ▼  (per-topic accuracy + due ratio + ease)
+weakness scorer
+        │
+        ▼  top-3 weak topics
+Home dashboard "Practice weak areas" CTA
+        │
+        ▼  pre-fills generator modal (P14.B)
+POST /generate  →  TopicSeed  →  SeedImporter
+```
+
 ## Database schema mirroring
 
 The local SQLite uses **the same logical schema as `db/schema.sql`** plus

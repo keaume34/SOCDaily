@@ -302,6 +302,99 @@ Conventions:
   - [x] `flutter analyze` clean (only pre-existing `assets/i18n/`).
     `flutter test` — **87 / 87 pass** (84 original + 3 new).
 
+- [x] **P13.D — Micro-interactions** (commit `016ae5f` on `main`)
+  - [x] Streak milestone signal: `streakStats()` returns
+    `(current, longest, milestoneHit)`. `milestoneHit ∈ {3, 7, 30, 100}`
+    only on the day the user freshly hits one of those streak lengths.
+  - [x] Stats `_StreakCard` fires `ConfettiWidget` (2.5 s burst) +
+    slide-up `MascotWidget(correct)` from the card bottom on milestone
+    hits. Already-celebrated state persists in `SharedPreferences`
+    keyed by `yyyy-mm-dd:milestone`.
+  - [x] New dep: `confetti ^0.8.0`.
+  - [x] `_ResultBanner` (MCQ): `FadeTransition` (300 ms) + `ScaleTransition`
+    (`Curves.elasticOut`, 320 ms) on the icon. `Icons.celebration` →
+    `Icons.check_circle` for the correct case.
+  - [x] `_ShakeOnce` wraps a wrong-selected option for a 180 ms
+    decaying-sine wiggle (±6 px, 3 oscillations).
+  - [x] New `TapBounce` shared widget (`lib/src/widgets/tap_bounce.dart`):
+    `AnimatedScale` 1.0 → 0.97 → 1.0 / 120 ms `Curves.easeOutBack`.
+    Wrapped around home `_DashCard`. Skipped on MCQ option (InkWell
+    ripple already conveys press).
+  - [x] `_GlowingWhyWrongButton` wraps the existing OutlinedButton with
+    an `AnimatedBuilder` driving `BoxShadow(accent.deep@40%, blur 12,
+    spread 2)` through 3 ease-in-out pulses then settles to none.
+  - [x] `_BreathingRing` wraps the Pomodoro `CustomPaint` with a 4 s
+    repeating-reverse `AnimationController`. `Transform.scale`
+    1.0 → 1.02 only when `phase == focus && running`; pauses + resets
+    to 1.0 otherwise.
+  - [x] 4 new tests in `user_state_repository_streak_test.dart`
+    covering milestone hits at 3/7/30/100, non-milestone day,
+    broken-streak day. `flutter test` — **91 / 91 pass**.
+
+- [x] **P13.E — Screen polish** (commit `d9f826d` on `main`)
+  - [x] Home `_DashCard` is now `ConsumerWidget`; icon tile background
+    goes `accent.soft`, icon goes `accent.deep`. Replaces the flat
+    `primary @ 12 %` wash so the user's accent choice actually surfaces
+    on Home.
+  - [x] `_DailyResult` (Daily Challenge completion) shows Otto (correct
+    mood) above the trophy.
+  - [x] `CertificateService` loads bundled `Quicksand` + `PlusJakartaSans`
+    TTFs via `rootBundle` and applies them per `pw.TextStyle`. Display
+    font on holder name / 'SOCDaily' / stat values / 'SELF-PACED'
+    badge; body font everywhere else. Falls back to Helvetica when
+    assets are missing (test envs).
+  - [x] Stats heatmap already accent-driven (`Color.lerp(accent.soft,
+    accent.deep, t)`) — no code change.
+  - [x] Cheatsheet left as-is (data screen, intentional restraint).
+  - [x] `flutter test` — **91 / 91 pass**.
+
+- [ ] **P14 — On-demand Content Generator** (planned; commit pending)
+  - **Why**: the user has a much larger pile of source PDFs than the 4
+    bundled samples. Manually running the Python pipeline per document
+    is fine for bootstrap; the app should also let users (a) request
+    generated cards/MCQs on a topic from inside the app, and (b)
+    auto-target weak areas based on their own SM-2 + MCQ accuracy.
+  - **P14.A — Backend wrapper**
+    - [ ] Wrap the existing Python `socdaily generate` pipeline in a
+      thin FastAPI service: `POST /generate { topic_request, n_cards,
+      n_mcq, source_pdfs[] }` returns one or more `TopicSeed` JSON
+      objects matching `app/assets/seed/*.json` shape.
+    - [ ] Reuse the existing LLM provider abstraction
+      (`src/socdaily/llm/`). No code path forks.
+    - [ ] Auth: simple bearer-token so the user's hosted instance is
+      not open to the world.
+    - [ ] Deploy alongside the nginx PDF host on the user's VPS
+      (`100.110.125.8`); reverse-proxy under `/generate` on the same
+      tailnet IP. Optional public exposure off by default.
+  - **P14.B — Flutter side: explicit "Generate more"**
+    - [ ] New service `lib/src/ai/content_generator.dart` POSTs to
+      `/generate` and decodes a `TopicSeed`.
+    - [ ] Reuse `SeedImporter.import_topic_seed` so a generated seed
+      lands in the local SQLite the same way bundled assets do.
+    - [ ] UI: a "Generate more" button on the Topic / Browse screens
+      opens a small modal — user picks counts (5/10/20 cards, 3/5/10
+      MCQs) and an optional free-form hint. On success, the new items
+      appear in the topic immediately.
+    - [ ] Settings exposes the generator base URL + token (mirrors
+      the existing AI tutor settings).
+  - **P14.C — Weakness-driven recommendations**
+    - [ ] Query `user_question_state` and `user_card_state` to score
+      every topic by `(mcq_accuracy_below_threshold, avg_ease,
+      due_card_ratio)`. Surface the top-3 weak topics on Home.
+    - [ ] Each weak-topic card has a "Practice weak areas" CTA that
+      pre-fills the generator modal (P14.B) with the topic locked in
+      and a higher MCQ count.
+    - [ ] Persist generated batches under
+      `assets/seed/generated/<yyyy-mm-dd>/<topic>.json` (gitignored)
+      so the user can review or rollback.
+  - **Open questions for anh trước khi vào P14**:
+    1. Backend host: VPS (Tailscale-only) hay expose public + bearer?
+    2. Source PDFs: yêu cầu user upload PDF trực tiếp qua app, hay chỉ
+       chọn từ list đã có trên VPS?
+    3. Có cần lưu lịch sử generated seeds vào Supabase để sync giữa
+       các thiết bị (giống user_state P11) không?
+
+
 ---
 
 ## Open questions / blockers
@@ -319,8 +412,9 @@ Conventions:
 
 ## Conventions
 
-- One PR per phase. Branch name: `devin/<unix-ts>-phaseN-<slug>`.
-- Each PR updates the relevant `[x]` row above before merge.
+- Tất cả commit thẳng vào branch `main` trên `nam091/SOCDaily` (private fork).
+- Origin `keaume34/SOCDaily` chỉ READ-only, không push lên đó.
+- Mỗi commit phải pass `flutter analyze` + `flutter test` (87+ tests) trước khi push.
 - All Dart code must pass `flutter analyze` and `flutter test` before push.
 - All TypeScript code (admin web) must pass `pnpm lint && pnpm typecheck` and
   `pnpm build` before push.
