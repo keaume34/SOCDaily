@@ -129,7 +129,10 @@ class UserStateRepository {
 
   // ---- Streak / activity log -------------------------------------------
 
-  static DateTime _dayBucket(DateTime t) => DateTime(t.year, t.month, t.day);
+  static DateTime _dayBucket(DateTime t) {
+    final u = t.toUtc();
+    return DateTime.utc(u.year, u.month, u.day);
+  }
 
   Future<void> recordActivity({
     int cards = 0,

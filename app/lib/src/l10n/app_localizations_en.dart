@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -47,7 +49,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeDailyChallenge => 'Daily challenge';
 
   @override
-  String get homeDailyChallengeSubtitle => 'A fresh set every day, same for everyone.';
+  String get homeDailyChallengeSubtitle =>
+      'A fresh set every day, same for everyone.';
 
   @override
   String get homeBrowse => 'Browse all material';
@@ -80,13 +83,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAccent => 'Accent';
 
   @override
-  String get settingsAccentSubtitle => 'Pairs with monochrome surfaces for a clean, professional look.';
+  String get settingsAccentSubtitle =>
+      'Pairs with monochrome surfaces for a clean, professional look.';
 
   @override
   String get settingsLanguageSystem => 'Follow system';
 
   @override
-  String get settingsAboutTagline => 'Build a SOC-analyst learning database from your own source PDFs, then study it like an Anki deck on steroids.';
+  String get settingsAboutTagline =>
+      'Build a SOC-analyst learning database from your own source PDFs, then study it like an Anki deck on steroids.';
 
   @override
   String settingsAboutVersion(String version) {
