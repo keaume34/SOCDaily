@@ -113,8 +113,9 @@ create table if not exists public.device_sync_pair (
 create table if not exists public.user_sync_payload (
   code            text not null references public.device_sync_pair(code) on delete cascade,
   device_id       uuid not null,
-  kind            text not null,        -- e.g. 'card_state' | 'question_state' | 'note' | 'bookmark' | 'streak'
-  item_key        text not null,        -- e.g. flashcard id, question id, "yyyymmdd"
+  kind            text not null,        -- 'card_state' | 'question_state' | 'note' | 'bookmark' | 'streak'
+                                        -- P14: 'generated_seed' (whole TopicSeed JSON), 'topic_weakness' (per-topic score)
+  item_key        text not null,        -- flashcard id / question id / "yyyymmdd" / topic_code (for generated_seed)
   payload         jsonb not null,
   updated_at      timestamptz not null default now(),
   primary key (code, device_id, kind, item_key)

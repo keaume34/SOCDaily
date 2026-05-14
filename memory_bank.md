@@ -348,36 +348,94 @@ Conventions:
   - [x] Cheatsheet left as-is (data screen, intentional restraint).
   - [x] `flutter test` — **91 / 91 pass**.
 
-- [ ] **P14 — On-demand Content Generator** (planned; commit pending)
+- [~] **P14 — On-demand Content Generator**
   - **Why**: the user has a much larger pile of source PDFs than the 4
     bundled samples. Manually running the Python pipeline per document
     is fine for bootstrap; the app should also let users (a) request
     generated cards/MCQs on a topic from inside the app, and (b)
     auto-target weak areas based on their own SM-2 + MCQ accuracy.
-  - **P14.A — Backend wrapper**
-    - [ ] Wrap the existing Python `socdaily generate` pipeline in a
-      thin FastAPI service: `POST /generate { topic_request, n_cards,
-      n_mcq, source_pdfs[] }` returns one or more `TopicSeed` JSON
-      objects matching `app/assets/seed/*.json` shape.
-    - [ ] Reuse the existing LLM provider abstraction
-      (`src/socdaily/llm/`). No code path forks.
-    - [ ] Auth: simple bearer-token so the user's hosted instance is
-      not open to the world.
-    - [ ] Deploy alongside the nginx PDF host on the user's VPS
-      (`100.110.125.8`); reverse-proxy under `/generate` on the same
-      tailnet IP. Optional public exposure off by default.
-  - **P14.B — Flutter side: explicit "Generate more"**
+  - **User decisions (2026-05-14)**:
+    1. Backend host: **public** (HTTPS + bearer token), not Tailscale-only.
+    2. Source PDFs: **both** — list pre-uploaded VPS PDFs *and* allow
+       in-app upload (multipart/form-data → `POST /pdfs`).
+    3. Generated seeds: **synced** via Supabase using the existing
+       `user_sync_payload` table with new `kind = 'generated_seed'`
+       (no schema change — see `supabase/README.md`).
+  - [x] **P14.A — FastAPI generator service** (this session)
+    - [x] `src/socdaily/api/auth.py` — Bearer-token dependency.
+      Tokens loaded from `SOCDAILY_API_TOKENS` (comma-separated). 401
+      for missing/invalid token; 503 when the env var is empty so the
+      operator notices the misconfig.
+    - [x] `src/socdaily/api/app.py` — FastAPI app factory + endpoints:
+      - `GET  /healthz` — liveness, no auth, returns `{"status":"ok"}`.
+      - `GET  /pdfs` — lists `*.pdf` under `SOCDAILY_PDF_DIR` (default
+        `./raw/pdf`). Bearer required.
+      - `POST /pdfs` — multipart upload; sanitises filenames (strips
+        `..`, collapses unsafe chars to `-`); rejects non-`.pdf`.
+      - `POST /generate` — extracts the PDF page slice via
+        `pdf_extract.pdf_to_markdown` + `slice_pages`, then calls
+        `pipeline.generate.generate_topic_seed` and returns the
+        `TopicSeed` JSON. LLM/parse failures bubble up as 502.
+    - [x] `tests/test_api.py` — 9 tests (auth required, 503 when
+      tokens unset, list/upload/safe-filename/non-pdf-rejection,
+      page-range validation, full happy path with a fake LLM).
+      `pytest`: **12/12 pass** (3 P0 tests + 9 new).
+    - [x] `pyproject.toml`: added `fastapi`, `uvicorn[standard]`,
+      `python-multipart` to runtime deps; `httpx` to dev deps for
+      `TestClient`.
+    - [x] `vps/socdaily-api.service` — systemd unit running uvicorn on
+      `127.0.0.1:8000` with `EnvironmentFile=/etc/socdaily/api.env`,
+      hardened (`ProtectSystem=strict`, `MemoryDenyWriteExecute=true`,
+      `ReadWritePaths` scoped to `/var/www/socdaily-pdfs` + repo).
+    - [x] `vps/nginx/socdaily-api.conf` — public reverse proxy at
+      `socdaily.example.com:443` (Let's Encrypt). Two rate-limit
+      zones: `socdaily_api` (3 r/s burst 10) for cheap routes,
+      `socdaily_generate` (10 r/min burst 2 nodelay) for the LLM
+      route. 5-minute proxy_read_timeout on `/generate`.
+    - [x] `vps/README.md` — appended a full Phase-14 section: topology
+      diagram, provisioning steps (certbot + venv + systemd), curl
+      examples, token-rotation procedure.
+    - [x] Bug-fix carried in this commit: `pdf_extract._have_pdftotext`
+      now also requires `pdfinfo`. On Git for Windows mingw64 only
+      `pdftotext.exe` is on `PATH` while `pdfinfo` is not, which
+      previously caused `pdfinfo` calls to crash. The pypdf fallback
+      handles the Windows case after the fix.
+    - **Endpoint contract for P14.B**:
+      ```
+      POST /generate
+      Authorization: Bearer <token>
+      {
+        "subject_code": "soc-fundamentals",
+        "subject_title": "SOC Fundamentals",
+        "chapter_code": "siem",
+        "chapter_title": "SIEM",
+        "topic_code": "siem-core-concepts",
+        "topic_title": "SIEM Core Concepts",
+        "pdf_filename": "SOC Analyst Guide.pdf",  // basename in SOCDAILY_PDF_DIR
+        "page_start": 12,
+        "page_end": 15,
+        "n_flashcards": 6,
+        "n_questions": 4,
+        "content_lang": "vi" | "en" | "bilingual",
+        "hint": "focus on Splunk SPL examples"   // optional
+      }
+      → 200 application/json: TopicSeed
+      ```
+  - [ ] **P14.B — Flutter side: explicit "Generate more"**
     - [ ] New service `lib/src/ai/content_generator.dart` POSTs to
-      `/generate` and decodes a `TopicSeed`.
+      `/generate` with the bearer token from settings.
     - [ ] Reuse `SeedImporter.import_topic_seed` so a generated seed
       lands in the local SQLite the same way bundled assets do.
-    - [ ] UI: a "Generate more" button on the Topic / Browse screens
-      opens a small modal — user picks counts (5/10/20 cards, 3/5/10
-      MCQs) and an optional free-form hint. On success, the new items
-      appear in the topic immediately.
-    - [ ] Settings exposes the generator base URL + token (mirrors
-      the existing AI tutor settings).
-  - **P14.C — Weakness-driven recommendations**
+    - [ ] UI: a "Generate more" button on Topic / Browse opens a modal
+      where the user picks counts + free-form hint. On success the
+      new items appear immediately.
+    - [ ] Settings exposes the generator base URL + token (mirrors the
+      existing AI tutor settings).
+    - [ ] Sync: on successful generate, push the resulting `TopicSeed`
+      JSON to Supabase under
+      `kind='generated_seed', item_key='<topic_code>'` so the user's
+      other devices get the same content on next sync.
+  - [ ] **P14.C — Weakness-driven recommendations**
     - [ ] Query `user_question_state` and `user_card_state` to score
       every topic by `(mcq_accuracy_below_threshold, avg_ease,
       due_card_ratio)`. Surface the top-3 weak topics on Home.
@@ -387,12 +445,8 @@ Conventions:
     - [ ] Persist generated batches under
       `assets/seed/generated/<yyyy-mm-dd>/<topic>.json` (gitignored)
       so the user can review or rollback.
-  - **Open questions for anh trước khi vào P14**:
-    1. Backend host: VPS (Tailscale-only) hay expose public + bearer?
-    2. Source PDFs: yêu cầu user upload PDF trực tiếp qua app, hay chỉ
-       chọn từ list đã có trên VPS?
-    3. Có cần lưu lịch sử generated seeds vào Supabase để sync giữa
-       các thiết bị (giống user_state P11) không?
+    - [ ] Sync: per-topic weakness score under
+      `kind='topic_weakness', item_key='<topic_code>'`.
 
 
 ---
