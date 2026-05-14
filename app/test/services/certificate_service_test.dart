@@ -19,7 +19,7 @@ void main() {
         mcqAttempts: 50,
         mcqCorrect: 40,
       ),
-      streak: (current: 3, longest: 7),
+      streak: (current: 3, longest: 7, milestoneHit: 3),
       subjectsCovered: 5,
     ));
 
@@ -40,7 +40,7 @@ void main() {
         mcqAttempts: 0,
         mcqCorrect: 0,
       ),
-      streak: (current: 0, longest: 0),
+      streak: (current: 0, longest: 0, milestoneHit: null),
       subjectsCovered: 0,
     ));
     expect(bytes, isNotEmpty);

@@ -217,9 +217,7 @@ class _CurrentItem extends ConsumerWidget {
             state.questionResults[q.question.id] == false)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.auto_awesome, size: 18),
-              label: const Text('Why was I wrong?'),
+            child: _GlowingWhyWrongButton(
               onPressed: () => TutorSheet.show(
                 context,
                 title: 'Why was I wrong?',
@@ -646,6 +644,77 @@ class _StatRow extends StatelessWidget {
           ),
           Text(value, style: theme.textTheme.titleMedium),
         ],
+      ),
+    );
+  }
+}
+
+class _GlowingWhyWrongButton extends ConsumerStatefulWidget {
+  const _GlowingWhyWrongButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  ConsumerState<_GlowingWhyWrongButton> createState() =>
+      _GlowingWhyWrongButtonState();
+}
+
+class _GlowingWhyWrongButtonState
+    extends ConsumerState<_GlowingWhyWrongButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    // ~3 pulses (1.4s each) then settle.
+    _c = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    _runPulses();
+  }
+
+  Future<void> _runPulses() async {
+    for (var i = 0; i < 3; i++) {
+      if (!mounted) return;
+      await _c.forward(from: 0);
+      if (!mounted) return;
+      await _c.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = ref.watch(settingsControllerProvider);
+    final accent = settings.accent;
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, child) {
+        final t = Curves.easeInOut.transform(_c.value);
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: accent.deep.withOpacity(0.4 * t),
+                blurRadius: 12 * t,
+                spreadRadius: 2 * t,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: OutlinedButton.icon(
+        icon: const Icon(Icons.auto_awesome, size: 18),
+        label: const Text('Why was I wrong?'),
+        onPressed: widget.onPressed,
       ),
     );
   }

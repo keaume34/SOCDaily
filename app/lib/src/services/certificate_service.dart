@@ -21,7 +21,7 @@ class CertificateData {
   final String holderName;
   final DateTime issuedOn;
   final TotalsSnapshot totals;
-  final ({int current, int longest}) streak;
+  final ({int current, int longest, int? milestoneHit}) streak;
   final int subjectsCovered;
 }
 

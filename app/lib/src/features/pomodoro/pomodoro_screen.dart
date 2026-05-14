@@ -42,7 +42,9 @@ class PomodoroScreen extends ConsumerWidget {
                       const SizedBox(height: 20),
                       AspectRatio(
                         aspectRatio: 1,
-                        child: CustomPaint(
+                        child: _BreathingRing(
+                          breathing:
+                              pom.phase == PomodoroPhase.focus && pom.running,
                           painter: _RingPainter(
                             progress: pom.progress,
                             gradientStart: accent.deep,
@@ -186,6 +188,71 @@ class _PhaseChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _BreathingRing extends StatefulWidget {
+  const _BreathingRing({
+    required this.breathing,
+    required this.painter,
+    required this.child,
+  });
+  final bool breathing;
+  final CustomPainter painter;
+  final Widget child;
+
+  @override
+  State<_BreathingRing> createState() => _BreathingRingState();
+}
+
+class _BreathingRingState extends State<_BreathingRing>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    );
+    if (widget.breathing) _c.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant _BreathingRing old) {
+    super.didUpdateWidget(old);
+    if (widget.breathing && !_c.isAnimating) {
+      _c.repeat(reverse: true);
+    } else if (!widget.breathing && _c.isAnimating) {
+      _c.stop();
+      _c.value = 0.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, child) {
+        // 1.0 → 1.02 → 1.0 across the 4s period.
+        final scale = 1.0 + 0.02 * _c.value;
+        return Transform.scale(
+          scale: scale,
+          child: CustomPaint(
+            painter: widget.painter,
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
     );
   }
 }

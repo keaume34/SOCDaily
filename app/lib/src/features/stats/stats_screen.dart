@@ -1,8 +1,12 @@
 // Phase 6 Stats screen: streak ring, totals chips, accuracy bar, and a
 // 90-day activity heatmap powered by `user_streak`.
 
+import 'dart:math' as math;
+
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/db/user_state_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -46,6 +50,7 @@ class StatsScreen extends ConsumerWidget {
                         : _StreakCard(
                             current: s.current,
                             longest: s.longest,
+                            milestoneHit: s.milestoneHit,
                             accent: settings.accent,
                           ),
                   ),
@@ -81,62 +86,173 @@ class StatsScreen extends ConsumerWidget {
   }
 }
 
-class _StreakCard extends StatelessWidget {
+class _StreakCard extends StatefulWidget {
   const _StreakCard({
     required this.current,
     required this.longest,
+    required this.milestoneHit,
     required this.accent,
   });
   final int current;
   final int longest;
+  final int? milestoneHit;
   final AppAccent accent;
+
+  @override
+  State<_StreakCard> createState() => _StreakCardState();
+}
+
+class _StreakCardState extends State<_StreakCard>
+    with TickerProviderStateMixin {
+  static const _prefsKey = 'stats.lastCelebratedMilestoneDay';
+
+  late final ConfettiController _confetti;
+  late final AnimationController _peek;
+  bool _celebrating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _confetti = ConfettiController(duration: const Duration(milliseconds: 2500));
+    _peek = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _maybeCelebrate();
+  }
+
+  @override
+  void didUpdateWidget(covariant _StreakCard old) {
+    super.didUpdateWidget(old);
+    if (widget.milestoneHit != old.milestoneHit) {
+      _maybeCelebrate();
+    }
+  }
+
+  Future<void> _maybeCelebrate() async {
+    final hit = widget.milestoneHit;
+    if (hit == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final today = _todayKey();
+    final lastKey = '$today:$hit';
+    if (prefs.getString(_prefsKey) == lastKey) return;
+    await prefs.setString(_prefsKey, lastKey);
+    if (!mounted) return;
+    setState(() => _celebrating = true);
+    _confetti.play();
+    _peek.forward(from: 0);
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    await _peek.reverse();
+    if (!mounted) return;
+    setState(() => _celebrating = false);
+  }
+
+  static String _todayKey() {
+    final n = DateTime.now();
+    return '${n.year}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void dispose() {
+    _confetti.dispose();
+    _peek.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [accent.deep, accent.soft],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.local_fire_department,
-                color: Colors.white,
-                size: 32,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('$current-day streak',
-                      style: theme.textTheme.titleLarge),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Longest: $longest day${longest == 1 ? '' : 's'}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [widget.accent.deep, widget.accent.soft],
                     ),
+                    shape: BoxShape.circle,
                   ),
-                ],
+                  child: const Icon(
+                    Icons.local_fire_department,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${widget.current}-day streak',
+                          style: theme.textTheme.titleLarge),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Longest: ${widget.longest} day${widget.longest == 1 ? '' : 's'}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Confetti burst centred above the card.
+        Positioned(
+          top: -8,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confetti,
+                blastDirection: math.pi / 2,
+                blastDirectionality: BlastDirectionality.explosive,
+                emissionFrequency: 0.05,
+                numberOfParticles: 18,
+                maxBlastForce: 18,
+                minBlastForce: 6,
+                gravity: 0.25,
+                shouldLoop: false,
+                colors: [widget.accent.deep, widget.accent.soft, Colors.white],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+        // Mascot peeks up from below the card with a thumbs-up.
+        if (_celebrating)
+          Positioned(
+            bottom: -32,
+            right: 12,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: _peek,
+                curve: Curves.easeOutBack,
+              )),
+              child: const MascotWidget(
+                mood: OttoMood.correct,
+                size: 64,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

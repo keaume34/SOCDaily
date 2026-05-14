@@ -6,6 +6,8 @@
 // selection back via `onChange`. State machine lives in the parent so the
 // study session can persist answers + drive SM-2 (Phase 4).
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../data/db/app_database.dart';
@@ -168,7 +170,7 @@ class _OptionTile extends StatelessWidget {
       iconColor = theme.colorScheme.primary;
     }
 
-    return InkWell(
+    final tile = InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
@@ -208,37 +210,113 @@ class _OptionTile extends StatelessWidget {
         ),
       ),
     );
+
+    // After submit, an option that was selected but is wrong shakes once.
+    if (submitted && isSelected && !isCorrectAnswer) {
+      return _ShakeOnce(child: tile);
+    }
+    return tile;
   }
 }
 
-class _ResultBanner extends StatelessWidget {
+class _ShakeOnce extends StatefulWidget {
+  const _ShakeOnce({required this.child});
+  final Widget child;
+  @override
+  State<_ShakeOnce> createState() => _ShakeOnceState();
+}
+
+class _ShakeOnceState extends State<_ShakeOnce>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, child) {
+        // Decaying sine wiggle: 3 oscillations across 180ms, fades to 0.
+        final t = _c.value;
+        final dx = 6.0 * math.sin(t * math.pi * 6) * (1 - t);
+        return Transform.translate(offset: Offset(dx, 0), child: child);
+      },
+      child: widget.child,
+    );
+  }
+}
+
+class _ResultBanner extends StatefulWidget {
   const _ResultBanner({required this.isCorrect});
   final bool isCorrect;
 
   @override
+  State<_ResultBanner> createState() => _ResultBannerState();
+}
+
+class _ResultBannerState extends State<_ResultBanner>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = isCorrect ? Colors.green.shade600 : theme.colorScheme.error;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.4)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isCorrect ? Icons.celebration : Icons.error_outline,
-            color: color,
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            isCorrect ? 'Correct' : 'Not quite',
-            style: theme.textTheme.titleSmall?.copyWith(color: color),
-          ),
-        ],
+    final color = widget.isCorrect ? Colors.green.shade600 : theme.colorScheme.error;
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: _c, curve: Curves.easeOut),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.4)),
+        ),
+        child: Row(
+          children: [
+            ScaleTransition(
+              scale: CurvedAnimation(parent: _c, curve: Curves.elasticOut),
+              child: Icon(
+                widget.isCorrect ? Icons.check_circle : Icons.error_outline,
+                color: color,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              widget.isCorrect ? 'Correct' : 'Not quite',
+              style: theme.textTheme.titleSmall?.copyWith(color: color),
+            ),
+          ],
+        ),
       ),
     );
   }
