@@ -159,7 +159,7 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _DashCard extends StatelessWidget {
+class _DashCard extends ConsumerWidget {
   const _DashCard({
     required this.icon,
     required this.title,
@@ -173,8 +173,9 @@ class _DashCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final accent = ref.watch(settingsControllerProvider).accent;
     return TapBounce(
       onTap: onTap,
       child: Card(
@@ -190,10 +191,10 @@ class _DashCard extends StatelessWidget {
                   height: 44,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.12),
+                    color: accent.soft,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: theme.colorScheme.primary),
+                  child: Icon(icon, color: accent.deep),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
