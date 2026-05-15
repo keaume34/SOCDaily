@@ -35,7 +35,7 @@ class PomodoroScreen extends ConsumerWidget {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                   child: Column(
                     children: [
                       _PhaseChip(phase: pom.phase),
@@ -145,37 +145,34 @@ class _PhaseChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final (label, icon, fg, bg) = switch (phase) {
+    final isDark = theme.brightness == Brightness.dark;
+    final (label, icon, fg) = switch (phase) {
       PomodoroPhase.idle => (
           'Ready',
-          Icons.hourglass_empty,
-          theme.colorScheme.onSurface,
-          theme.colorScheme.surfaceContainerHighest,
+          Icons.hourglass_empty_rounded,
+          theme.colorScheme.onSurfaceVariant,
         ),
       PomodoroPhase.focus => (
           'Focus',
-          Icons.center_focus_strong,
-          theme.colorScheme.onPrimaryContainer,
-          theme.colorScheme.primaryContainer,
+          Icons.center_focus_strong_rounded,
+          const Color(0xFF3B82F6),
         ),
       PomodoroPhase.shortBreak => (
           'Short break',
-          Icons.local_cafe_outlined,
-          theme.colorScheme.onSecondaryContainer,
-          theme.colorScheme.secondaryContainer,
+          Icons.local_cafe_rounded,
+          const Color(0xFF10B981),
         ),
       PomodoroPhase.longBreak => (
           'Long break',
-          Icons.weekend_outlined,
-          theme.colorScheme.onTertiaryContainer,
-          theme.colorScheme.tertiaryContainer,
+          Icons.weekend_rounded,
+          const Color(0xFF8B5CF6),
         ),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
+        color: fg.withOpacity(isDark ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(50),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

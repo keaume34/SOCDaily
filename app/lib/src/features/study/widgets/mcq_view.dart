@@ -45,23 +45,34 @@ class McqView extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              _isMultiple
-                  ? 'MULTIPLE CHOICE'
-                  : (_isTrueFalse ? 'TRUE / FALSE' : 'SINGLE CHOICE'),
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                letterSpacing: 1.3,
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary
+                    .withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.1 : 0.06),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _isMultiple
+                    ? 'MULTIPLE CHOICE'
+                    : (_isTrueFalse ? 'TRUE / FALSE' : 'SINGLE CHOICE'),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  letterSpacing: 1.0,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             const Spacer(),
             Container(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest
-                    .withOpacity(0.6),
-                borderRadius: BorderRadius.circular(999),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.06)
+                    : Colors.black.withOpacity(0.04),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 question.difficulty,
@@ -94,17 +105,27 @@ class McqView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondaryContainer
-                    .withOpacity(0.4),
-                borderRadius: BorderRadius.circular(14),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.06)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.black.withOpacity(0.15)
+                        : const Color(0xFFD4C9BE).withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    Icons.menu_book_outlined,
+                    Icons.menu_book_rounded,
                     size: 18,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: theme.colorScheme.primary,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -144,9 +165,13 @@ class _OptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    Color border = theme.colorScheme.outlineVariant.withOpacity(0.6);
-    Color background =
-        theme.colorScheme.surfaceContainerHighest.withOpacity(0.4);
+    final isDark = theme.brightness == Brightness.dark;
+    Color border = isDark
+        ? Colors.white.withOpacity(0.06)
+        : Colors.black.withOpacity(0.05);
+    Color background = isDark
+        ? Colors.white.withOpacity(0.04)
+        : Colors.white.withOpacity(0.7);
     IconData icon = isSelected
         ? Icons.radio_button_checked
         : Icons.radio_button_off;
@@ -154,10 +179,10 @@ class _OptionTile extends StatelessWidget {
 
     if (submitted) {
       if (isCorrectAnswer) {
-        border = Colors.green.shade400;
-        background = Colors.green.withOpacity(0.12);
-        icon = Icons.check_circle;
-        iconColor = Colors.green.shade600;
+        border = const Color(0xFF10B981).withOpacity(0.3);
+        background = const Color(0xFF10B981).withOpacity(isDark ? 0.1 : 0.06);
+        icon = Icons.check_circle_rounded;
+        iconColor = const Color(0xFF10B981);
       } else if (isSelected) {
         border = theme.colorScheme.error;
         background = theme.colorScheme.error.withOpacity(0.12);
@@ -172,13 +197,19 @@ class _OptionTile extends StatelessWidget {
 
     final tile = InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: border, width: 1.4),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: border.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -290,15 +321,15 @@ class _ResultBannerState extends State<_ResultBanner>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = widget.isCorrect ? Colors.green.shade600 : theme.colorScheme.error;
+    final isDark = theme.brightness == Brightness.dark;
+    final color = widget.isCorrect ? const Color(0xFF10B981) : const Color(0xFFEF4444);
     return FadeTransition(
       opacity: CurvedAnimation(parent: _c, curve: Curves.easeOut),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.4)),
+          color: color.withOpacity(isDark ? 0.1 : 0.06),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
           children: [

@@ -76,11 +76,11 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.close),
+                icon: const Icon(Icons.close_rounded),
                 onPressed: () => context.pop(),
                 tooltip: 'Exit',
               ),
@@ -98,7 +98,9 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
         LinearProgressIndicator(
           value: items.isEmpty ? 0 : (_index / items.length).clamp(0.0, 1.0),
           minHeight: 3,
-          backgroundColor: theme.colorScheme.surfaceContainerHighest,
+          backgroundColor: theme.brightness == Brightness.dark
+              ? Colors.white.withOpacity(0.06)
+              : Colors.black.withOpacity(0.04),
         ),
         Expanded(
           child: isDone

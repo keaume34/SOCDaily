@@ -50,7 +50,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -151,11 +151,13 @@ class _OnboardingPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          MascotWidget(mood: mood, size: 160),
-          const SizedBox(height: 32),
+          MascotWidget(mood: mood, size: 140),
+          const SizedBox(height: 40),
           Text(
             title,
-            style: theme.textTheme.headlineMedium,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -163,6 +165,7 @@ class _OnboardingPage extends StatelessWidget {
             body,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
+              height: 1.5,
             ),
             textAlign: TextAlign.center,
           ),

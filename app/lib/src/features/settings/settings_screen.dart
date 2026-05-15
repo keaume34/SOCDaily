@@ -35,7 +35,7 @@ class SettingsScreen extends ConsumerWidget {
               backgroundColor: Colors.transparent,
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               sliver: SliverList.list(
                 children: [
                   _SectionHeader(text: l10n.settingsAppearance),
@@ -109,13 +109,15 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 10),
       child: Text(
         text.toUpperCase(),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              letterSpacing: 1.0,
+        style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w600,
             ),
       ),
     );
@@ -256,28 +258,33 @@ class _AccentSwatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final ring = selected
-        ? Theme.of(context).colorScheme.onSurface
-        : Theme.of(context).colorScheme.outlineVariant;
     return Semantics(
       label: accent.label,
       selected: selected,
       button: true,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          width: 64,
-          height: 64,
+          width: 56,
+          height: 56,
           decoration: BoxDecoration(
             gradient: accent.accentGradient(brightness),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: ring, width: selected ? 2.4 : 1.0),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: accent.deep.withOpacity(0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : [],
           ),
           alignment: Alignment.center,
           child: selected
-              ? const Icon(Icons.check, color: Colors.white, size: 28)
+              ? const Icon(Icons.check_rounded, color: Colors.white, size: 24)
               : null,
         ),
       ),

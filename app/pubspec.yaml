@@ -26,7 +26,7 @@ dependencies:
   shared_preferences: ^2.3.2
 
   # i18n
-  intl: ^0.20.0
+  intl: any
 
   # HTTP / AI
   dio: ^5.7.0

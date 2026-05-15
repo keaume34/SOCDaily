@@ -1,5 +1,5 @@
-// Phase 6 Stats screen: streak ring, totals chips, accuracy bar, and a
-// 90-day activity heatmap powered by `user_streak`.
+// Stats screen: streak card, totals row, accuracy, and a 90-day heatmap
+// with pastel accent ramp. Redesigned with glass cards and softer visuals.
 
 import 'dart:math' as math;
 
@@ -26,6 +26,7 @@ class StatsScreen extends ConsumerWidget {
     final heatmap = ref.watch(activityHeatmapProvider);
     final totals = ref.watch(totalsSnapshotProvider);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return GradientBackground(
       accent: settings.accent,
@@ -38,7 +39,7 @@ class StatsScreen extends ConsumerWidget {
               pinned: true,
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               sliver: SliverList.list(
                 children: [
                   streak.when(
@@ -46,12 +47,13 @@ class StatsScreen extends ConsumerWidget {
                         const LinearProgressIndicator(minHeight: 2),
                     error: (e, st) => Text('$e'),
                     data: (s) => s.current == 0 && s.longest == 0
-                        ? const _EmptyStatsCard()
+                        ? _EmptyStatsCard(isDark: isDark)
                         : _StreakCard(
                             current: s.current,
                             longest: s.longest,
                             milestoneHit: s.milestoneHit,
                             accent: settings.accent,
+                            isDark: isDark,
                           ),
                   ),
                   const SizedBox(height: 16),
@@ -59,14 +61,39 @@ class StatsScreen extends ConsumerWidget {
                     loading: () =>
                         const LinearProgressIndicator(minHeight: 2),
                     error: (e, st) => Text('$e'),
-                    data: (t) => _TotalsRow(snapshot: t),
+                    data: (t) => _TotalsRow(
+                      snapshot: t,
+                      isDark: isDark,
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Last 90 days',
-                    style: theme.textTheme.titleMedium,
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, bottom: 10),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary
+                                .withOpacity(isDark ? 0.12 : 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.calendar_month_rounded,
+                            size: 16,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Last 90 days',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
                   heatmap.when(
                     loading: () =>
                         const LinearProgressIndicator(minHeight: 2),
@@ -74,6 +101,7 @@ class StatsScreen extends ConsumerWidget {
                     data: (rows) => _Heatmap(
                       rows: rows,
                       accent: settings.accent,
+                      isDark: isDark,
                     ),
                   ),
                 ],
@@ -92,11 +120,13 @@ class _StreakCard extends StatefulWidget {
     required this.longest,
     required this.milestoneHit,
     required this.accent,
+    required this.isDark,
   });
   final int current;
   final int longest;
   final int? milestoneHit;
   final AppAccent accent;
+  final bool isDark;
 
   @override
   State<_StreakCard> createState() => _StreakCardState();
@@ -166,51 +196,84 @@ class _StreakCardState extends State<_StreakCard>
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [widget.accent.deep, widget.accent.soft],
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.local_fire_department,
-                    color: Colors.white,
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('${widget.current}-day streak',
-                          style: theme.textTheme.titleLarge),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Longest: ${widget.longest} day${widget.longest == 1 ? '' : 's'}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: widget.isDark
+                  ? [
+                      widget.accent.deep.withOpacity(0.15),
+                      widget.accent.deep.withOpacity(0.05),
+                    ]
+                  : [
+                      widget.accent.soft.withOpacity(0.5),
+                      widget.accent.soft.withOpacity(0.15),
                     ],
-                  ),
-                ),
-              ],
             ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: widget.isDark
+                    ? widget.accent.deep.withOpacity(0.15)
+                    : widget.accent.soft.withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [widget.accent.deep, widget.accent.soft],
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: widget.accent.deep.withOpacity(0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.local_fire_department_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${widget.current}-day streak',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Longest: ${widget.longest} day${widget.longest == 1 ? '' : 's'}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        // Confetti burst centred above the card.
         Positioned(
           top: -8,
           left: 0,
@@ -233,7 +296,6 @@ class _StreakCardState extends State<_StreakCard>
             ),
           ),
         ),
-        // Mascot peeks up from below the card with a thumbs-up.
         if (_celebrating)
           Positioned(
             bottom: -32,
@@ -258,41 +320,45 @@ class _StreakCardState extends State<_StreakCard>
 }
 
 class _TotalsRow extends StatelessWidget {
-  const _TotalsRow({required this.snapshot});
+  const _TotalsRow({required this.snapshot, required this.isDark});
   final TotalsSnapshot snapshot;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final accuracyPct =
-        (snapshot.accuracy * 100).toStringAsFixed(0);
+    final accuracyPct = (snapshot.accuracy * 100).toStringAsFixed(0);
     return Row(
       children: [
         Expanded(
           child: _StatChip(
-            icon: Icons.style,
+            icon: Icons.style_rounded,
             label: 'Cards rated',
             value: '${snapshot.cardsKnown}',
+            color: const Color(0xFF3B82F6),
+            isDark: isDark,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Expanded(
           child: _StatChip(
-            icon: Icons.repeat,
-            label: 'Total reviews',
+            icon: Icons.repeat_rounded,
+            label: 'Reviews',
             value: '${snapshot.cardsReviewed}',
+            color: const Color(0xFF8B5CF6),
+            isDark: isDark,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Expanded(
           child: _StatChip(
-            icon: Icons.bolt,
-            label: 'MCQ accuracy',
+            icon: Icons.bolt_rounded,
+            label: 'MCQ acc.',
             value: snapshot.mcqAttempts == 0 ? '—' : '$accuracyPct%',
             subtitle: snapshot.mcqAttempts == 0
                 ? null
                 : '${snapshot.mcqCorrect}/${snapshot.mcqAttempts}',
-            valueStyle: theme.textTheme.titleLarge,
+            color: const Color(0xFF10B981),
+            isDark: isDark,
           ),
         ),
       ],
@@ -305,147 +371,179 @@ class _StatChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    required this.color,
+    required this.isDark,
     this.subtitle,
-    this.valueStyle,
   });
   final IconData icon;
   final String label;
   final String value;
+  final Color color;
+  final bool isDark;
   final String? subtitle;
-  final TextStyle? valueStyle;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon,
-                    size: 16, color: theme.colorScheme.primary),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    label,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withOpacity(0.06)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.15)
+                : const Color(0xFFD4C9BE).withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: color,
             ),
-            const SizedBox(height: 6),
-            Text(value, style: valueStyle ?? theme.textTheme.titleLarge),
-            if (subtitle != null)
-              Text(
-                subtitle!,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (subtitle != null)
+            Text(
+              subtitle!,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
 }
 
 class _Heatmap extends StatelessWidget {
-  const _Heatmap({required this.rows, required this.accent});
+  const _Heatmap({
+    required this.rows,
+    required this.accent,
+    required this.isDark,
+  });
   final List<HeatmapDay> rows;
   final AppAccent accent;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     if (rows.isEmpty) return const SizedBox.shrink();
     final maxCount = rows.fold<int>(0, (m, r) => r.count > m ? r.count : m);
-    // 13 weeks × 7 days = 91 cells. We render 90 days right-aligned, so the
-    // earliest cells may be empty if rows.length < 91.
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final weeks = (rows.length / 7).ceil();
-                final cellSize =
-                    ((constraints.maxWidth - (weeks - 1) * 4) / weeks)
-                        .clamp(8.0, 18.0);
-                return SizedBox(
-                  height: cellSize * 7 + 6 * 4,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (var w = 0; w < weeks; w++) ...[
-                        if (w > 0) const SizedBox(width: 4),
-                        Column(
-                          children: [
-                            for (var d = 0; d < 7; d++) ...[
-                              if (d > 0) const SizedBox(height: 4),
-                              _Cell(
-                                size: cellSize,
-                                color: _colorFor(
-                                  context,
-                                  w * 7 + d < rows.length
-                                      ? rows[w * 7 + d].count
-                                      : 0,
-                                  maxCount,
-                                ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withOpacity(0.06)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.15)
+                : const Color(0xFFD4C9BE).withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final weeks = (rows.length / 7).ceil();
+              final cellSize =
+                  ((constraints.maxWidth - (weeks - 1) * 4) / weeks)
+                      .clamp(8.0, 18.0);
+              return SizedBox(
+                height: cellSize * 7 + 6 * 4,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var w = 0; w < weeks; w++) ...[
+                      if (w > 0) const SizedBox(width: 4),
+                      Column(
+                        children: [
+                          for (var d = 0; d < 7; d++) ...[
+                            if (d > 0) const SizedBox(height: 4),
+                            _Cell(
+                              size: cellSize,
+                              color: _colorFor(
+                                context,
+                                w * 7 + d < rows.length
+                                    ? rows[w * 7 + d].count
+                                    : 0,
+                                maxCount,
                               ),
-                            ],
+                            ),
                           ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ],
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Text('Less',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 10,
+                  )),
+              const SizedBox(width: 6),
+              for (final v in [0, 1, 2, 3, 4]) ...[
+                Container(
+                  width: 12,
+                  height: 12,
+                  margin: const EdgeInsets.only(right: 3),
+                  decoration: BoxDecoration(
+                    color: _colorFor(context, v, 4),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text('Less',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    )),
-                const SizedBox(width: 6),
-                for (final v in [0, 1, 2, 3, 4]) ...[
-                  Container(
-                    width: 12,
-                    height: 12,
-                    margin: const EdgeInsets.only(right: 4),
-                    decoration: BoxDecoration(
-                      color: _colorFor(context, v, 4),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ],
-                Text('More',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    )),
+                ),
               ],
-            ),
-          ],
-        ),
+              Text('More',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 10,
+                  )),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Color _colorFor(BuildContext context, int count, int max) {
-    final scheme = Theme.of(context).colorScheme;
     if (count == 0) {
-      return scheme.surfaceContainerHighest.withOpacity(0.5);
+      return isDark
+          ? Colors.white.withOpacity(0.06)
+          : Colors.black.withOpacity(0.04);
     }
-    // Bucket into 4 intensity levels.
     final levels = max == 0 ? 0 : (count / (max / 4)).ceil().clamp(1, 4);
     final t = levels / 4.0;
     return Color.lerp(accent.soft, accent.deep, t)!;
@@ -464,39 +562,55 @@ class _Cell extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: BorderRadius.circular(4),
       ),
     );
   }
 }
 
 class _EmptyStatsCard extends StatelessWidget {
-  const _EmptyStatsCard();
+  const _EmptyStatsCard({required this.isDark});
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-        child: Column(
-          children: [
-            const MascotWidget(mood: OttoMood.sleeping, size: 100),
-            const SizedBox(height: 16),
-            Text(
-              'No stats yet',
-              style: theme.textTheme.titleMedium,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withOpacity(0.06)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.15)
+                : const Color(0xFFD4C9BE).withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const MascotWidget(mood: OttoMood.sleeping, size: 100),
+          const SizedBox(height: 16),
+          Text(
+            'No stats yet',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Start a study session to build your streak!',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Start a study session to build your streak!',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
