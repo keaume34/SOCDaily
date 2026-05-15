@@ -302,6 +302,206 @@ Conventions:
   - [x] `flutter analyze` clean (only pre-existing `assets/i18n/`).
     `flutter test` — **87 / 87 pass** (84 original + 3 new).
 
+- [x] **P13.D — Micro-interactions** (commit `016ae5f` on `main`)
+  - [x] Streak milestone signal: `streakStats()` returns
+    `(current, longest, milestoneHit)`. `milestoneHit ∈ {3, 7, 30, 100}`
+    only on the day the user freshly hits one of those streak lengths.
+  - [x] Stats `_StreakCard` fires `ConfettiWidget` (2.5 s burst) +
+    slide-up `MascotWidget(correct)` from the card bottom on milestone
+    hits. Already-celebrated state persists in `SharedPreferences`
+    keyed by `yyyy-mm-dd:milestone`.
+  - [x] New dep: `confetti ^0.8.0`.
+  - [x] `_ResultBanner` (MCQ): `FadeTransition` (300 ms) + `ScaleTransition`
+    (`Curves.elasticOut`, 320 ms) on the icon. `Icons.celebration` →
+    `Icons.check_circle` for the correct case.
+  - [x] `_ShakeOnce` wraps a wrong-selected option for a 180 ms
+    decaying-sine wiggle (±6 px, 3 oscillations).
+  - [x] New `TapBounce` shared widget (`lib/src/widgets/tap_bounce.dart`):
+    `AnimatedScale` 1.0 → 0.97 → 1.0 / 120 ms `Curves.easeOutBack`.
+    Wrapped around home `_DashCard`. Skipped on MCQ option (InkWell
+    ripple already conveys press).
+  - [x] `_GlowingWhyWrongButton` wraps the existing OutlinedButton with
+    an `AnimatedBuilder` driving `BoxShadow(accent.deep@40%, blur 12,
+    spread 2)` through 3 ease-in-out pulses then settles to none.
+  - [x] `_BreathingRing` wraps the Pomodoro `CustomPaint` with a 4 s
+    repeating-reverse `AnimationController`. `Transform.scale`
+    1.0 → 1.02 only when `phase == focus && running`; pauses + resets
+    to 1.0 otherwise.
+  - [x] 4 new tests in `user_state_repository_streak_test.dart`
+    covering milestone hits at 3/7/30/100, non-milestone day,
+    broken-streak day. `flutter test` — **91 / 91 pass**.
+
+- [x] **P13.E — Screen polish** (commit `d9f826d` on `main`)
+  - [x] Home `_DashCard` is now `ConsumerWidget`; icon tile background
+    goes `accent.soft`, icon goes `accent.deep`. Replaces the flat
+    `primary @ 12 %` wash so the user's accent choice actually surfaces
+    on Home.
+  - [x] `_DailyResult` (Daily Challenge completion) shows Otto (correct
+    mood) above the trophy.
+  - [x] `CertificateService` loads bundled `Quicksand` + `PlusJakartaSans`
+    TTFs via `rootBundle` and applies them per `pw.TextStyle`. Display
+    font on holder name / 'SOCDaily' / stat values / 'SELF-PACED'
+    badge; body font everywhere else. Falls back to Helvetica when
+    assets are missing (test envs).
+  - [x] Stats heatmap already accent-driven (`Color.lerp(accent.soft,
+    accent.deep, t)`) — no code change.
+  - [x] Cheatsheet left as-is (data screen, intentional restraint).
+  - [x] `flutter test` — **91 / 91 pass**.
+
+- [~] **P14 — On-demand Content Generator**
+  - **Why**: the user has a much larger pile of source PDFs than the 4
+    bundled samples. Manually running the Python pipeline per document
+    is fine for bootstrap; the app should also let users (a) request
+    generated cards/MCQs on a topic from inside the app, and (b)
+    auto-target weak areas based on their own SM-2 + MCQ accuracy.
+  - **User decisions (2026-05-14)**:
+    1. Backend host: **public** (HTTPS + bearer token), not Tailscale-only.
+    2. Source PDFs: **both** — list pre-uploaded VPS PDFs *and* allow
+       in-app upload (multipart/form-data → `POST /pdfs`).
+    3. Generated seeds: **synced** via Supabase using the existing
+       `user_sync_payload` table with new `kind = 'generated_seed'`
+       (no schema change — see `supabase/README.md`).
+  - [x] **P14.A — FastAPI generator service** (this session)
+    - [x] `src/socdaily/api/auth.py` — Bearer-token dependency.
+      Tokens loaded from `SOCDAILY_API_TOKENS` (comma-separated). 401
+      for missing/invalid token; 503 when the env var is empty so the
+      operator notices the misconfig.
+    - [x] `src/socdaily/api/app.py` — FastAPI app factory + endpoints:
+      - `GET  /healthz` — liveness, no auth, returns `{"status":"ok"}`.
+      - `GET  /pdfs` — lists `*.pdf` under `SOCDAILY_PDF_DIR` (default
+        `./raw/pdf`). Bearer required.
+      - `POST /pdfs` — multipart upload; sanitises filenames (strips
+        `..`, collapses unsafe chars to `-`); rejects non-`.pdf`.
+      - `POST /generate` — extracts the PDF page slice via
+        `pdf_extract.pdf_to_markdown` + `slice_pages`, then calls
+        `pipeline.generate.generate_topic_seed` and returns the
+        `TopicSeed` JSON. LLM/parse failures bubble up as 502.
+    - [x] `tests/test_api.py` — 9 tests (auth required, 503 when
+      tokens unset, list/upload/safe-filename/non-pdf-rejection,
+      page-range validation, full happy path with a fake LLM).
+      `pytest`: **12/12 pass** (3 P0 tests + 9 new).
+    - [x] `pyproject.toml`: added `fastapi`, `uvicorn[standard]`,
+      `python-multipart` to runtime deps; `httpx` to dev deps for
+      `TestClient`.
+    - [x] `vps/socdaily-api.service` — systemd unit running uvicorn on
+      `127.0.0.1:8000` with `EnvironmentFile=/etc/socdaily/api.env`,
+      hardened (`ProtectSystem=strict`, `MemoryDenyWriteExecute=true`,
+      `ReadWritePaths` scoped to `/var/www/socdaily-pdfs` + repo).
+    - [x] `vps/nginx/socdaily-api.conf` — public reverse proxy at
+      `socdaily.example.com:443` (Let's Encrypt). Two rate-limit
+      zones: `socdaily_api` (3 r/s burst 10) for cheap routes,
+      `socdaily_generate` (10 r/min burst 2 nodelay) for the LLM
+      route. 5-minute proxy_read_timeout on `/generate`.
+    - [x] `vps/README.md` — appended a full Phase-14 section: topology
+      diagram, provisioning steps (certbot + venv + systemd), curl
+      examples, token-rotation procedure.
+    - [x] Bug-fix carried in this commit: `pdf_extract._have_pdftotext`
+      now also requires `pdfinfo`. On Git for Windows mingw64 only
+      `pdftotext.exe` is on `PATH` while `pdfinfo` is not, which
+      previously caused `pdfinfo` calls to crash. The pypdf fallback
+      handles the Windows case after the fix.
+    - **Endpoint contract for P14.B**:
+      ```
+      POST /generate
+      Authorization: Bearer <token>
+      {
+        "subject_code": "soc-fundamentals",
+        "subject_title": "SOC Fundamentals",
+        "chapter_code": "siem",
+        "chapter_title": "SIEM",
+        "topic_code": "siem-core-concepts",
+        "topic_title": "SIEM Core Concepts",
+        "pdf_filename": "SOC Analyst Guide.pdf",  // basename in SOCDAILY_PDF_DIR
+        "page_start": 12,
+        "page_end": 15,
+        "n_flashcards": 6,
+        "n_questions": 4,
+        "content_lang": "vi" | "en" | "bilingual",
+        "hint": "focus on Splunk SPL examples"   // optional
+      }
+      → 200 application/json: TopicSeed
+      ```
+  - [x] **P14.B — Flutter side: explicit "Generate more"**
+    - [x] `lib/src/ai/generator_settings.dart`: `GeneratorSettings`
+      (baseUrl + token) persisted via SharedPreferences; mirrors the
+      P7 `AiSettings` pattern. `generatorSettingsControllerProvider`.
+    - [x] `lib/src/ai/content_generator.dart`: `ContentGeneratorService`
+      with `listPdfs()` (`GET /pdfs`) + `generate(GenerateRequest)`
+      (`POST /generate`) using bearer auth. 5-minute receive timeout
+      to match nginx `proxy_read_timeout` from P14.A. Server `detail`
+      messages surfaced as `GeneratorException(detail, statusCode)`.
+    - [x] `SeedImporter.importTopicSeed(Map)` + new
+      `TopicSeedImportResult`: imports an in-memory TopicSeed JSON
+      (same shape as bundled `assets/seed/**.json`). Subject + chapter
+      upsert by code; topic upsert by `(chapter_id, code)`; flashcards
+      and questions replaced atomically. User state survives because
+      it lives in separate tables keyed by row id.
+    - [x] `lib/src/features/generate/generate_screen.dart` (`/generate`):
+      full-screen form with PDF dropdown (refresh button hits
+      `/pdfs`), taxonomy fields (subject/chapter/topic code+title),
+      page-range, counts (1–20 flashcards, 0–12 MCQs), language
+      ChoiceChips (server default / vi / en / bilingual), free-form
+      hint, validation, loading state, error card with server detail,
+      success card with "Open in Study" CTA. Accepts a
+      `GeneratePrefill` via `GoRouter.extra` so callers can pre-fill
+      taxonomy or lock the topic (P14.C will lock it for "Practice
+      weak areas").
+    - [x] Settings: new "Content generator" card with base URL +
+      bearer token (masked, show/hide), "Configured / Not configured"
+      status, clear-token action.
+    - [x] Browse top app bar: `auto_awesome_outlined` icon → push
+      `/generate`. TopicStudy `_DoneView`: "Generate more for this
+      topic" button pre-fills taxonomy from the current
+      subject/chapter/topic.
+    - [x] Sync: new `SyncKinds.generatedSeed` kind +
+      `SyncEngine.applyEnvelope` calls `SeedImporter.importTopicSeed`
+      on the partner device. `SyncController.pushGeneratedSeed` is
+      called best-effort after a successful generate so the partner
+      gets the new content on next `syncNow`.
+    - [x] 15 new tests: 4× generator settings (initial empty, set+
+      persist, reload, clearToken), 5× content generator (isConfigured,
+      not-configured throws, listPdfs request shape, generate full-
+      body assertions, hint+lang omission when null, server-detail
+      surfacing on 4xx), 4× seed importer (fresh import, re-import
+      replaces in-place, two topics share a chapter, no-source-pdf
+      leaves source_id null), 2× generated-seed sync (envelope is
+      applied on partner device, second sync is idempotent). Total
+      107/107 pass; `flutter analyze` clean (only pre-existing infos).
+  - [x] **P14.C — Weakness-driven recommendations**
+    - [x] `lib/src/data/db/weakness_scorer.dart`: `WeaknessScorer.topWeakTopics`
+      joins `user_question_state` + `user_card_state` with topics. Combined
+      score (0..1, higher = weaker) =
+      `0.5*accuracy + 0.3*ease + 0.2*due_ratio`, with weights
+      re-normalised when a signal is missing so a flashcard-only topic
+      isn't always outranked by an MCQ-heavy one. Untouched topics
+      (no MCQ attempts AND no reviewed flashcards) are excluded.
+      `WeaknessEntry` carries the topic + subject + chapter rows plus
+      raw signals (accuracy, avgEase, dueRatio, attempts, cardsReviewed).
+    - [x] Home dashboard: new `_WeakTopicsSection` above the dash cards.
+      Shows the top-3 weak topics with subject/chapter breadcrumb,
+      one-line "why" (accuracy %, due %, ease), and an
+      `auto_awesome_outlined` CTA. Tap → `/generate` with a locked
+      `GeneratePrefill` (lockTopic=true, nQuestions=8 to ratio more
+      practice MCQs).
+    - [x] `lib/src/data/seed/generated_seed_archive.dart`: best-effort
+      writes the raw TopicSeed JSON to
+      `<getApplicationDocumentsDirectory>/socdaily/generated/<yyyy-mm-dd>/<topic>.json`
+      after a successful generate. Filename safety regex strips path
+      traversal (`../etc/passwd` → `etc-passwd.json`).
+    - [x] Sync: new `SyncKinds.topicWeakness`. `SyncEngine.collectLocal`
+      snapshots all scored topics into envelopes
+      (item_key=topic_code, payload={score, mcq_accuracy, avg_ease,
+      due_ratio, attempts, cards_reviewed}). Applied on the partner
+      device via `RemoteWeaknessStore` (SharedPreferences-backed
+      JSON blob, last-write-wins on `updated_at`).
+    - [x] 12 new tests: 5× scorer (excludes untouched, accuracy ranking,
+      score range bounds, top-N cap, allScores returns every topic),
+      4× archive (writes correct path, sanitises filename, list sorted
+      newest-first, list empty when no dir), 3× weakness sync (merge
+      LWW, engine applies envelope, no-store fallback). Total
+      119/119 pass; `flutter analyze` clean (only pre-existing infos).
+
+
 ---
 
 ## Open questions / blockers
@@ -319,8 +519,9 @@ Conventions:
 
 ## Conventions
 
-- One PR per phase. Branch name: `devin/<unix-ts>-phaseN-<slug>`.
-- Each PR updates the relevant `[x]` row above before merge.
+- Tất cả commit thẳng vào branch `main` trên `nam091/SOCDaily` (private fork).
+- Origin `keaume34/SOCDaily` chỉ READ-only, không push lên đó.
+- Mỗi commit phải pass `flutter analyze` + `flutter test` (87+ tests) trước khi push.
 - All Dart code must pass `flutter analyze` and `flutter test` before push.
 - All TypeScript code (admin web) must pass `pnpm lint && pnpm typecheck` and
   `pnpm build` before push.

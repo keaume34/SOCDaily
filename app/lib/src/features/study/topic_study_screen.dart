@@ -12,6 +12,7 @@ import '../../data/db/content_repository.dart';
 import '../../data/db/user_state_repository.dart';
 import '../../pdf/pdf_source_config.dart';
 import '../../theme/gradient_background.dart';
+import '../generate/generate_screen.dart';
 import '../settings/settings_controller.dart';
 import 'study_session_controller.dart';
 import 'widgets/flashcard_view.dart';
@@ -108,7 +109,11 @@ class _SessionView extends ConsumerWidget {
         _ProgressBar(state: state),
         Expanded(
           child: state.isDone
-              ? _DoneView(state: state, onRestart: controller.restart)
+              ? _DoneView(
+                  state: state,
+                  topic: topic,
+                  onRestart: controller.restart,
+                )
               : Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                   child: _CurrentItem(
@@ -217,9 +222,7 @@ class _CurrentItem extends ConsumerWidget {
             state.questionResults[q.question.id] == false)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.auto_awesome, size: 18),
-              label: const Text('Why was I wrong?'),
+            child: _GlowingWhyWrongButton(
               onPressed: () => TutorSheet.show(
                 context,
                 title: 'Why was I wrong?',
@@ -530,14 +533,19 @@ class _ProgressBar extends StatelessWidget {
   }
 }
 
-class _DoneView extends StatelessWidget {
-  const _DoneView({required this.state, required this.onRestart});
+class _DoneView extends ConsumerWidget {
+  const _DoneView({
+    required this.state,
+    required this.topic,
+    required this.onRestart,
+  });
 
   final StudySessionState state;
+  final Topic topic;
   final VoidCallback onRestart;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
@@ -573,6 +581,34 @@ class _DoneView extends StatelessWidget {
             onPressed: onRestart,
             icon: const Icon(Icons.refresh),
             label: const Text('Study again'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final db = ref.read(appDatabaseProvider);
+              final chapter = await (db.select(db.chapters)
+                    ..where((c) => c.id.equals(topic.chapterId)))
+                  .getSingleOrNull();
+              final subject = chapter == null
+                  ? null
+                  : await (db.select(db.subjects)
+                        ..where((s) => s.id.equals(chapter.subjectId)))
+                      .getSingleOrNull();
+              if (!context.mounted) return;
+              context.push(
+                '/generate',
+                extra: GeneratePrefill(
+                  subjectCode: subject?.code,
+                  subjectTitle: subject?.title,
+                  chapterCode: chapter?.code,
+                  chapterTitle: chapter?.title,
+                  topicCode: topic.code,
+                  topicTitle: topic.title,
+                ),
+              );
+            },
+            icon: const Icon(Icons.auto_awesome_outlined),
+            label: const Text('Generate more for this topic'),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
@@ -646,6 +682,77 @@ class _StatRow extends StatelessWidget {
           ),
           Text(value, style: theme.textTheme.titleMedium),
         ],
+      ),
+    );
+  }
+}
+
+class _GlowingWhyWrongButton extends ConsumerStatefulWidget {
+  const _GlowingWhyWrongButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  ConsumerState<_GlowingWhyWrongButton> createState() =>
+      _GlowingWhyWrongButtonState();
+}
+
+class _GlowingWhyWrongButtonState
+    extends ConsumerState<_GlowingWhyWrongButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    // ~3 pulses (1.4s each) then settle.
+    _c = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    _runPulses();
+  }
+
+  Future<void> _runPulses() async {
+    for (var i = 0; i < 3; i++) {
+      if (!mounted) return;
+      await _c.forward(from: 0);
+      if (!mounted) return;
+      await _c.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = ref.watch(settingsControllerProvider);
+    final accent = settings.accent;
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, child) {
+        final t = Curves.easeInOut.transform(_c.value);
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: accent.deep.withOpacity(0.4 * t),
+                blurRadius: 12 * t,
+                spreadRadius: 2 * t,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: OutlinedButton.icon(
+        icon: const Icon(Icons.auto_awesome, size: 18),
+        label: const Text('Why was I wrong?'),
+        onPressed: widget.onPressed,
       ),
     );
   }

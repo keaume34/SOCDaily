@@ -85,3 +85,117 @@ If you ever want PDFs reachable outside the tailnet:
 
 The current tailnet-only setup is **deliberately** preferred for MVP:
 no public exposure, no DMCA surface, no SSL cert renewal.
+
+---
+
+# SOCDaily — Public Generator API (Phase 14.A)
+
+The same VPS also runs a **public** FastAPI service that wraps the
+Python pipeline so the Flutter app can request newly-generated TopicSeed
+JSON on demand. Unlike the PDF host, this one is exposed on the public
+internet — bearer-token auth + nginx rate limiting do the heavy lifting.
+
+## Topology
+
+```
+[ Flutter app anywhere on the internet ]
+        │  HTTPS + Authorization: Bearer <token>
+        ▼
+[ nginx on socdaily.example.com : 443 ]   (Let's Encrypt cert)
+        │  reverse proxies → 127.0.0.1:8000
+        ▼
+[ uvicorn / socdaily.api.app:app ]         (systemd: socdaily-api.service)
+        │
+        ├── GET  /healthz             — public, returns "ok"
+        ├── GET  /pdfs                — list .pdf under SOCDAILY_PDF_DIR
+        ├── POST /pdfs                — multipart upload (50 MB cap)
+        └── POST /generate            — runs pipeline.generate.generate_topic_seed
+                                         and returns the TopicSeed JSON
+```
+
+The PDF directory is shared between the two services — uploads via
+`POST /pdfs` land in `/var/www/socdaily-pdfs/`, so the same file is then
+servable by the tailnet nginx (Phase 12) for in-app viewing. One source
+of truth.
+
+## Provisioning
+
+```bash
+# 1. Pick a hostname pointing at the VPS public IP and edit:
+#       vps/nginx/socdaily-api.conf  →  server_name socdaily.example.com
+#
+# 2. On the VPS:
+sudo apt-get install -y python3-venv certbot python3-certbot-nginx
+sudo certbot --nginx -d socdaily.example.com   # provisions TLS + reload
+
+git clone https://github.com/<you>/SOCDaily.git ~/SOCDaily
+cd ~/SOCDaily
+python3 -m venv .venv
+.venv/bin/pip install -e .
+
+# 3. Secrets — pick a long random token (or several, comma-separated).
+sudo install -d -m 0700 -o ubuntu -g ubuntu /etc/socdaily
+sudo tee /etc/socdaily/api.env >/dev/null <<EOF
+SOCDAILY_API_TOKENS=$(openssl rand -hex 24),$(openssl rand -hex 24)
+SOCDAILY_PDF_DIR=/var/www/socdaily-pdfs
+SOCDAILY_LLM_PROVIDER=openai
+SOCDAILY_LLM_BASE_URL=https://api.openai.com/v1
+SOCDAILY_LLM_API_KEY=sk-...
+SOCDAILY_LLM_MODEL=gpt-4o-mini
+SOCDAILY_CONTENT_LANG=vi
+EOF
+sudo chmod 0600 /etc/socdaily/api.env
+sudo chown ubuntu:ubuntu /etc/socdaily/api.env
+
+# 4. Install the systemd unit + nginx site.
+sudo cp vps/socdaily-api.service /etc/systemd/system/
+sudo cp vps/nginx/socdaily-api.conf /etc/nginx/sites-available/socdaily-api
+sudo ln -sf /etc/nginx/sites-available/socdaily-api \
+            /etc/nginx/sites-enabled/socdaily-api
+sudo systemctl daemon-reload
+sudo systemctl enable --now socdaily-api
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+## Verifying
+
+```bash
+# Public health (no auth):
+curl https://socdaily.example.com/healthz                # → {"status":"ok"}
+
+# Listing PDFs (auth required):
+curl -H "Authorization: Bearer <token>" \
+     https://socdaily.example.com/pdfs
+
+# Generate flashcards + MCQs from a PDF page range:
+curl -X POST https://socdaily.example.com/generate \
+     -H "Authorization: Bearer <token>" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "subject_code":"soc-fundamentals",
+       "subject_title":"SOC Fundamentals",
+       "chapter_code":"siem",
+       "chapter_title":"SIEM",
+       "topic_code":"siem-core-concepts",
+       "topic_title":"SIEM Core Concepts",
+       "pdf_filename":"SOC Analyst Guide.pdf",
+       "page_start":12,
+       "page_end":15,
+       "n_flashcards":6,
+       "n_questions":4,
+       "content_lang":"vi"
+     }'
+```
+
+## Rotating tokens
+
+Edit `/etc/socdaily/api.env`, restart the service:
+
+```bash
+sudo nano /etc/socdaily/api.env
+sudo systemctl restart socdaily-api
+```
+
+Old tokens become invalid immediately. The app's settings screen
+(P14.B) lets each user paste their own token, so rotating only requires
+re-pasting on the device(s) that need access.

@@ -146,6 +146,82 @@ class SeedImporter {
     );
   }
 
+  /// Imports a single in-memory `TopicSeed` JSON map (same shape as the
+  /// bundled `assets/seed/**.json` files). Used by the on-demand generator
+  /// (P14.B) and the cross-device sync of generated seeds.
+  ///
+  /// The subject / chapter are upserted by code; the topic is upserted by
+  /// `(chapter_id, code)`. Flashcards and questions for the topic are
+  /// replaced atomically — same semantics as [ensureImported] for bundled
+  /// seeds, so user state (SM-2 schedule, MCQ history) survives because it
+  /// lives in separate tables keyed by row id.
+  Future<TopicSeedImportResult> importTopicSeed(
+    Map<String, dynamic> seed,
+  ) async {
+    int flashcardsAdded = 0;
+    int questionsAdded = 0;
+    late int topicId;
+    late bool topicCreated;
+
+    await _db.transaction(() async {
+      final subjectCode = seed['subject_code'] as String;
+      final chapterCode = seed['chapter_code'] as String;
+      final topicCode = seed['topic_code'] as String;
+
+      final subjectId = (await _upsertSubject(
+        code: subjectCode,
+        title: seed['subject_title'] as String? ?? subjectCode,
+      ))
+          .$1;
+      final chapterId = (await _upsertChapter(
+        subjectId: subjectId,
+        code: chapterCode,
+        title: seed['chapter_title'] as String? ?? chapterCode,
+      ))
+          .$1;
+      final topicResult = await _upsertTopic(
+        chapterId: chapterId,
+        code: topicCode,
+        title: seed['topic_title'] as String? ?? topicCode,
+        summary: seed['topic_summary'] as String?,
+      );
+      topicId = topicResult.$1;
+      topicCreated = topicResult.$2;
+
+      final sourcePdf = seed['source_pdf'] as String?;
+      final sourceId = sourcePdf == null || sourcePdf.isEmpty
+          ? null
+          : await _upsertSource(sourcePdf);
+
+      final flashcards = (seed['flashcards'] as List?)
+              ?.cast<Map<String, dynamic>>() ??
+          const [];
+      await _replaceFlashcards(
+        topicId: topicId,
+        sourceId: sourceId,
+        flashcards: flashcards,
+      );
+      flashcardsAdded = flashcards.length;
+
+      final questions = (seed['questions'] as List?)
+              ?.cast<Map<String, dynamic>>() ??
+          const [];
+      await _replaceQuestions(
+        topicId: topicId,
+        sourceId: sourceId,
+        questions: questions,
+      );
+      questionsAdded = questions.length;
+    });
+
+    return TopicSeedImportResult(
+      topicId: topicId,
+      topicCreated: topicCreated,
+      flashcardsAdded: flashcardsAdded,
+      questionsAdded: questionsAdded,
+    );
+  }
+
   Future<(int id, bool created)> _upsertSubject({
     required String code,
     required String title,
@@ -261,7 +337,7 @@ class SeedImporter {
 
   Future<void> _replaceFlashcards({
     required int topicId,
-    required int sourceId,
+    required int? sourceId,
     required List<Map<String, dynamic>> flashcards,
   }) async {
     await (_db.delete(_db.flashcards)
@@ -287,7 +363,7 @@ class SeedImporter {
 
   Future<void> _replaceQuestions({
     required int topicId,
-    required int sourceId,
+    required int? sourceId,
     required List<Map<String, dynamic>> questions,
   }) async {
     final oldIds = await (_db.select(_db.questions)
@@ -348,6 +424,20 @@ class SeedImportResult {
   final int subjectsAdded;
   final int chaptersAdded;
   final int topicsAdded;
+  final int flashcardsAdded;
+  final int questionsAdded;
+}
+
+class TopicSeedImportResult {
+  const TopicSeedImportResult({
+    required this.topicId,
+    required this.topicCreated,
+    required this.flashcardsAdded,
+    required this.questionsAdded,
+  });
+
+  final int topicId;
+  final bool topicCreated;
   final int flashcardsAdded;
   final int questionsAdded;
 }

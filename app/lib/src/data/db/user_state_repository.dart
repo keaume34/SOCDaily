@@ -129,7 +129,10 @@ class UserStateRepository {
 
   // ---- Streak / activity log -------------------------------------------
 
-  static DateTime _dayBucket(DateTime t) => DateTime(t.year, t.month, t.day);
+  static DateTime _dayBucket(DateTime t) {
+    final u = t.toUtc();
+    return DateTime.utc(u.year, u.month, u.day);
+  }
 
   Future<void> recordActivity({
     int cards = 0,
@@ -152,16 +155,24 @@ class UserStateRepository {
         );
   }
 
-  /// Returns `(currentStreak, longestStreak)` measured in consecutive
-  /// days that have ≥1 card or question.
-  Future<({int current, int longest})> streakStats(
+  /// Streak milestones that should trigger a celebration.
+  static const streakMilestones = [3, 7, 30, 100];
+
+  /// Returns `(currentStreak, longestStreak, milestoneHit)`.
+  ///
+  /// `milestoneHit` is non-null only on the day the user's current streak
+  /// freshly reaches one of [streakMilestones] — i.e. `current` is in the
+  /// list AND today has activity. Callers can use this to fire confetti
+  /// once per milestone day; persistence of "already celebrated" is the
+  /// caller's job.
+  Future<({int current, int longest, int? milestoneHit})> streakStats(
       {DateTime? now}) async {
     final today = _dayBucket(now ?? DateTime.now());
     final rows = await (_db.select(_db.userStreak)
           ..orderBy([(s) => OrderingTerm.asc(s.day)]))
         .get();
     if (rows.isEmpty) {
-      return (current: 0, longest: 0);
+      return (current: 0, longest: 0, milestoneHit: null);
     }
     final days = rows
         .where((r) => r.cardsReviewed > 0 || r.questionsAnswered > 0)
@@ -188,7 +199,10 @@ class UserStateRepository {
       current += 1;
       cursor = cursor.subtract(const Duration(days: 1));
     }
-    return (current: current, longest: longest);
+    final milestoneHit = days.contains(today) && streakMilestones.contains(current)
+        ? current
+        : null;
+    return (current: current, longest: longest, milestoneHit: milestoneHit);
   }
 
   /// Returns a list of (day, cardsReviewed+questionsAnswered) for the
@@ -403,8 +417,8 @@ class SearchResults {
   bool get isEmpty => flashcards.isEmpty && questions.isEmpty;
 }
 
-final streakStatsProvider =
-    FutureProvider.autoDispose<({int current, int longest})>((ref) async {
+final streakStatsProvider = FutureProvider.autoDispose<
+    ({int current, int longest, int? milestoneHit})>((ref) async {
   return ref.watch(userStateRepositoryProvider).streakStats();
 });
 

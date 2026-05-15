@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../ai/ai_settings.dart';
+import '../../ai/generator_settings.dart';
 import '../../l10n/app_localizations.dart';
 import '../../sync/sync_controller.dart';
 import '../../theme/app_accent.dart';
@@ -56,6 +57,9 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   const _SectionHeader(text: 'AI tutor'),
                   const _AiTutorCard(),
+                  const SizedBox(height: 24),
+                  const _SectionHeader(text: 'Content generator'),
+                  const _GeneratorCard(),
                   const SizedBox(height: 24),
                   const _SectionHeader(text: 'Cloud sync'),
                   const _CloudSyncCard(),
@@ -535,6 +539,116 @@ class _CloudSyncCard extends ConsumerWidget {
               icon: const Icon(Icons.devices_outlined),
               label: const Text('Manage devices…'),
               onPressed: () => context.push('/sync'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GeneratorCard extends ConsumerStatefulWidget {
+  const _GeneratorCard();
+
+  @override
+  ConsumerState<_GeneratorCard> createState() => _GeneratorCardState();
+}
+
+class _GeneratorCardState extends ConsumerState<_GeneratorCard> {
+  late final TextEditingController _baseUrlCtl;
+  late final TextEditingController _tokenCtl;
+  bool _showToken = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final s = ref.read(generatorSettingsControllerProvider);
+    _baseUrlCtl = TextEditingController(text: s.baseUrl);
+    _tokenCtl = TextEditingController(text: s.token);
+  }
+
+  @override
+  void dispose() {
+    _baseUrlCtl.dispose();
+    _tokenCtl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ref.watch(generatorSettingsControllerProvider);
+    final c = ref.read(generatorSettingsControllerProvider.notifier);
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Point this at the SOCDaily generator service (P14.A) on your '
+              'VPS. The token authenticates uploads + generation requests; '
+              'rotate it from the server side.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _baseUrlCtl,
+              decoration: const InputDecoration(
+                labelText: 'Base URL',
+                hintText: 'https://socdaily.example.com',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: c.setBaseUrl,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _tokenCtl,
+              obscureText: !_showToken,
+              decoration: InputDecoration(
+                labelText: 'Bearer token',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _showToken ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () => setState(() => _showToken = !_showToken),
+                ),
+              ),
+              onChanged: c.setToken,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  s.isConfigured
+                      ? Icons.check_circle_outline
+                      : Icons.info_outline,
+                  size: 16,
+                  color: s.isConfigured
+                      ? Colors.green
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  s.isConfigured ? 'Configured' : 'Not configured',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () async {
+                    await c.clearToken();
+                    _tokenCtl.clear();
+                    setState(() {});
+                  },
+                  child: const Text('Clear token'),
+                ),
+              ],
             ),
           ],
         ),

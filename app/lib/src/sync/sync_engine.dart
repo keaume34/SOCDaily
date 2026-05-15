@@ -8,14 +8,32 @@
 import 'package:drift/drift.dart';
 
 import '../data/db/app_database.dart';
+import '../data/db/weakness_scorer.dart';
+import '../data/seed/seed_importer.dart';
+import 'remote_weakness_store.dart';
 import 'sync_remote.dart';
 import 'sync_types.dart';
 
 class SyncEngine {
-  SyncEngine(this._db, this._remote);
+  SyncEngine(
+    this._db,
+    this._remote, {
+    SeedImporter? seedImporter,
+    WeaknessScorer? weaknessScorer,
+    RemoteWeaknessStore? remoteWeaknessStore,
+  })  : _seedImporter = seedImporter ?? SeedImporter(_db),
+        _weaknessScorer = weaknessScorer ?? WeaknessScorer(_db),
+        _remoteWeaknessStore = remoteWeaknessStore;
 
   final AppDatabase _db;
   final SyncRemote _remote;
+  final SeedImporter _seedImporter;
+  final WeaknessScorer _weaknessScorer;
+
+  /// Optional: when present, inbound `topic_weakness` envelopes are merged
+  /// into this store. When absent (e.g. unit tests for the older P11 flow),
+  /// the envelopes are applied as no-ops.
+  final RemoteWeaknessStore? _remoteWeaknessStore;
 
   /// Snapshots all syncable local rows for a given pairing.
   Future<List<SyncEnvelope>> collectLocalEnvelopes({
@@ -77,6 +95,32 @@ class SyncEngine {
             'created_at': b.createdAt.toUtc().toIso8601String(),
           },
           updatedAt: b.createdAt.toUtc(),
+        ),
+      );
+    }
+
+    // Topic-weakness scores are derived state but cheap to push and let
+    // the partner device skip a re-compute. We snapshot _all_ scored
+    // topics (not just the top-N) so the receiving device can fold them
+    // into its own ranking later.
+    final weakness = await _weaknessScorer.allScores();
+    final now = DateTime.now().toUtc();
+    for (final w in weakness) {
+      envs.add(
+        SyncEnvelope(
+          code: code,
+          deviceId: deviceId,
+          kind: SyncKinds.topicWeakness,
+          itemKey: w.topic.code,
+          payload: <String, dynamic>{
+            'score': w.score,
+            if (w.mcqAccuracy != null) 'mcq_accuracy': w.mcqAccuracy,
+            if (w.avgEase != null) 'avg_ease': w.avgEase,
+            'due_ratio': w.dueRatio,
+            'attempts': w.attempts,
+            'cards_reviewed': w.cardsReviewed,
+          },
+          updatedAt: now,
         ),
       );
     }
@@ -152,6 +196,29 @@ class SyncEngine {
               ),
             );
         return true;
+      case SyncKinds.generatedSeed:
+        // Idempotent: re-importing an already-imported seed is a no-op
+        // because `importTopicSeed` upserts the topic row and replaces
+        // its flashcards / questions atomically. User state lives in
+        // separate tables keyed by row id, so it survives re-import.
+        await _seedImporter.importTopicSeed(env.payload);
+        return true;
+      case SyncKinds.topicWeakness:
+        final store = _remoteWeaknessStore;
+        if (store == null) return false;
+        final entry = RemoteWeaknessEntry(
+          topicCode: env.itemKey,
+          score: (env.payload['score'] as num?)?.toDouble() ?? 0.0,
+          updatedAt: env.updatedAt,
+          mcqAccuracy: (env.payload['mcq_accuracy'] as num?)?.toDouble(),
+          avgEase: (env.payload['avg_ease'] as num?)?.toDouble(),
+          dueRatio: (env.payload['due_ratio'] as num?)?.toDouble(),
+          attempts: (env.payload['attempts'] as num?)?.toInt() ?? 0,
+          cardsReviewed:
+              (env.payload['cards_reviewed'] as num?)?.toInt() ?? 0,
+        );
+        final applied = await store.mergeFromRemote([entry]);
+        return applied > 0;
       default:
         return false;
     }

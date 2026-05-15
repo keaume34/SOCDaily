@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -47,7 +49,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeDailyChallenge => 'Thử thách hằng ngày';
 
   @override
-  String get homeDailyChallengeSubtitle => 'Một bộ mới mỗi ngày, ai cũng nhận cùng đề.';
+  String get homeDailyChallengeSubtitle =>
+      'Một bộ mới mỗi ngày, ai cũng nhận cùng đề.';
 
   @override
   String get homeBrowse => 'Xem tất cả tài liệu';
@@ -80,13 +83,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsAccent => 'Màu nhấn';
 
   @override
-  String get settingsAccentSubtitle => 'Kết hợp với nền trắng/đen để giữ cảm giác chuyên nghiệp.';
+  String get settingsAccentSubtitle =>
+      'Kết hợp với nền trắng/đen để giữ cảm giác chuyên nghiệp.';
 
   @override
   String get settingsLanguageSystem => 'Theo hệ thống';
 
   @override
-  String get settingsAboutTagline => 'Xây dựng kho học SOC từ PDF của riêng anh, sau đó học như Anki nhưng đầy đủ hơn.';
+  String get settingsAboutTagline =>
+      'Xây dựng kho học SOC từ PDF của riêng anh, sau đó học như Anki nhưng đầy đủ hơn.';
 
   @override
   String settingsAboutVersion(String version) {

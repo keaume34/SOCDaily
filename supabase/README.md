@@ -68,3 +68,23 @@ device A                 Supabase                 device B
 
 Conflict resolution is last-write-wins per `(code, kind, item_key)`,
 keyed on `updated_at`.
+
+## Payload kinds
+
+`user_sync_payload.kind` is an open enum — adding a new kind needs **no
+schema change** as long as the row fits the existing `(code, device_id,
+kind, item_key, payload, updated_at)` shape.
+
+| `kind`            | `item_key`        | `payload` shape                  | Phase |
+|-------------------|-------------------|----------------------------------|-------|
+| `card_state`      | flashcard id      | `{ease, interval_days, next_review, last_result, review_count}` | P11 |
+| `question_state`  | question id       | `{attempts, correct, last_choice, last_attempt}` | P11 |
+| `bookmark`        | item id           | `{kind: "flashcard"\|"question", at}` | P11 |
+| `note`            | per-item note id  | `{item_kind, item_id, body, at}` | P11 |
+| `streak`          | `yyyymmdd`        | `{cards_reviewed, questions_answered}` | P11 |
+| `generated_seed`  | topic code        | full `TopicSeed` JSON (one row per generated batch) | P14 |
+| `topic_weakness`  | topic code        | `{score, mcq_accuracy, due_ratio, computed_at}` | P14 |
+
+The Flutter sync engine just iterates kinds it knows about; an older
+client encountering an unknown `kind` ignores the row and continues —
+forward-compatible by construction.

@@ -110,4 +110,51 @@ void main() {
         0, (a, r) => a + r.cardsReviewed + r.questionsAnswered);
     expect(total, 2);
   });
+
+  test('streakStats returns null milestoneHit on a non-milestone day', () async {
+    final base = DateTime.utc(2025, 1, 1);
+    for (final d in [0, 1]) {
+      await repo.recordActivity(cards: 1, now: base.add(Duration(days: d)));
+    }
+    final s = await repo.streakStats(now: base.add(const Duration(days: 1, hours: 9)));
+    expect(s.current, 2);
+    expect(s.milestoneHit, isNull);
+  });
+
+  test('streakStats fires milestoneHit at days 3, 7, 30, 100', () async {
+    for (final target in [3, 7, 30, 100]) {
+      final localDb = AppDatabase.forExecutor(NativeDatabase.memory());
+      final localRepo = UserStateRepository(localDb);
+      final base = DateTime.utc(2025, 1, 1);
+      for (var d = 0; d < target; d++) {
+        await localRepo.recordActivity(cards: 1, now: base.add(Duration(days: d)));
+      }
+      final s = await localRepo.streakStats(
+          now: base.add(Duration(days: target - 1, hours: 9)));
+      expect(s.current, target, reason: 'current at milestone $target');
+      expect(s.milestoneHit, target,
+          reason: 'milestoneHit should equal $target on the day it lands');
+      await localDb.close();
+    }
+  });
+
+  test('streakStats does not fire milestoneHit when today has no activity', () async {
+    final base = DateTime.utc(2025, 1, 1);
+    for (final d in [0, 1, 2]) {
+      await repo.recordActivity(cards: 1, now: base.add(Duration(days: d)));
+    }
+    final s = await repo.streakStats(now: base.add(const Duration(days: 3, hours: 9)));
+    expect(s.current, 0);
+    expect(s.milestoneHit, isNull);
+  });
+
+  test('streakStats does not refire milestone past day 4', () async {
+    final base = DateTime.utc(2025, 1, 1);
+    for (final d in [0, 1, 2, 3]) {
+      await repo.recordActivity(cards: 1, now: base.add(Duration(days: d)));
+    }
+    final s = await repo.streakStats(now: base.add(const Duration(days: 3, hours: 9)));
+    expect(s.current, 4);
+    expect(s.milestoneHit, isNull);
+  });
 }

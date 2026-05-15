@@ -7,10 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/db/user_state_repository.dart';
+import '../../data/db/weakness_scorer.dart';
 import '../../data/seed/seed_bootstrap.dart';
+import '../../widgets/tap_bounce.dart';
 import '../../l10n/app_localizations.dart';
 import '../../mascot/mascot_widget.dart';
 import '../../theme/gradient_background.dart';
+import '../generate/generate_screen.dart';
 import '../settings/settings_controller.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -100,6 +103,7 @@ class HomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
               sliver: SliverList.list(
                 children: [
+                  const _WeakTopicsSection(),
                   _DashCard(
                     icon: Icons.school,
                     title: l10n.homeStartSession,
@@ -158,7 +162,7 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _DashCard extends StatelessWidget {
+class _DashCard extends ConsumerWidget {
   const _DashCard({
     required this.icon,
     required this.title,
@@ -170,51 +174,201 @@ class _DashCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final accent = ref.watch(settingsControllerProvider).accent;
+    return TapBounce(
+      onTap: onTap,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: accent.soft,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: accent.deep),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WeakTopicsSection extends ConsumerWidget {
+  const _WeakTopicsSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Row(
+    final accent = ref.watch(settingsControllerProvider).accent;
+    final weakAsync = ref.watch(topWeakTopicsProvider);
+
+    return weakAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (e, _) => const SizedBox.shrink(),
+      data: (rows) {
+        if (rows.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: theme.colorScheme.primary),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                child: Row(
                   children: [
-                    Text(title, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 2),
+                    Icon(Icons.trending_down,
+                        size: 18, color: accent.deep),
+                    const SizedBox(width: 6),
                     Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      'Weak areas',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      'Top ${rows.length}',
+                      style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              for (final entry in rows) ...[
+                _WeakTopicCard(entry: entry),
+                const SizedBox(height: 8),
+              ],
+              const SizedBox(height: 6),
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+class _WeakTopicCard extends ConsumerWidget {
+  const _WeakTopicCard({required this.entry});
+
+  final WeaknessEntry entry;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final accent = ref.watch(settingsControllerProvider).accent;
+    final acc = entry.mcqAccuracy;
+    final reasonBits = <String>[
+      if (acc != null) '${(acc * 100).toStringAsFixed(0)}% MCQ',
+      if (entry.dueRatio > 0)
+        '${(entry.dueRatio * 100).toStringAsFixed(0)}% due',
+      if (entry.avgEase != null)
+        'ease ${entry.avgEase!.toStringAsFixed(2)}',
+    ];
+    final reason = reasonBits.isEmpty
+        ? 'Not enough data yet — try a session.'
+        : reasonBits.join('  ·  ');
+
+    return TapBounce(
+      onTap: () => _practice(context),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _practice(context),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: accent.soft,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.priority_high, color: accent.deep),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(entry.topic.title,
+                          style: theme.textTheme.titleSmall),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${entry.subject.title} · ${entry.chapter.title}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        reason,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.auto_awesome_outlined,
+                    color: theme.colorScheme.onSurfaceVariant),
+              ],
+            ),
+          ),
         ),
+      ),
+    );
+  }
+
+  void _practice(BuildContext context) {
+    context.push(
+      '/generate',
+      extra: GeneratePrefill(
+        subjectCode: entry.subject.code,
+        subjectTitle: entry.subject.title,
+        chapterCode: entry.chapter.code,
+        chapterTitle: entry.chapter.title,
+        topicCode: entry.topic.code,
+        topicTitle: entry.topic.title,
+        lockTopic: true,
+        nQuestions: 8,
       ),
     );
   }

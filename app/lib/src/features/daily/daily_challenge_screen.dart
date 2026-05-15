@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/db/content_repository.dart';
 import '../../data/db/user_state_repository.dart';
+import '../../mascot/mascot_widget.dart';
 import '../../theme/gradient_background.dart';
 import '../settings/settings_controller.dart';
 import '../study/study_session_controller.dart';
@@ -299,8 +300,10 @@ class _DailyResult extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const MascotWidget(mood: OttoMood.correct, size: 100),
+            const SizedBox(height: 8),
             Icon(Icons.emoji_events_outlined,
-                size: 56, color: theme.colorScheme.primary),
+                size: 48, color: theme.colorScheme.primary),
             const SizedBox(height: 12),
             Text('Daily challenge complete',
                 style: theme.textTheme.headlineSmall),
