@@ -467,18 +467,39 @@ Conventions:
       leaves source_id null), 2× generated-seed sync (envelope is
       applied on partner device, second sync is idempotent). Total
       107/107 pass; `flutter analyze` clean (only pre-existing infos).
-  - [ ] **P14.C — Weakness-driven recommendations**
-    - [ ] Query `user_question_state` and `user_card_state` to score
-      every topic by `(mcq_accuracy_below_threshold, avg_ease,
-      due_card_ratio)`. Surface the top-3 weak topics on Home.
-    - [ ] Each weak-topic card has a "Practice weak areas" CTA that
-      pre-fills the generator modal (P14.B) with the topic locked in
-      and a higher MCQ count.
-    - [ ] Persist generated batches under
-      `assets/seed/generated/<yyyy-mm-dd>/<topic>.json` (gitignored)
-      so the user can review or rollback.
-    - [ ] Sync: per-topic weakness score under
-      `kind='topic_weakness', item_key='<topic_code>'`.
+  - [x] **P14.C — Weakness-driven recommendations**
+    - [x] `lib/src/data/db/weakness_scorer.dart`: `WeaknessScorer.topWeakTopics`
+      joins `user_question_state` + `user_card_state` with topics. Combined
+      score (0..1, higher = weaker) =
+      `0.5*accuracy + 0.3*ease + 0.2*due_ratio`, with weights
+      re-normalised when a signal is missing so a flashcard-only topic
+      isn't always outranked by an MCQ-heavy one. Untouched topics
+      (no MCQ attempts AND no reviewed flashcards) are excluded.
+      `WeaknessEntry` carries the topic + subject + chapter rows plus
+      raw signals (accuracy, avgEase, dueRatio, attempts, cardsReviewed).
+    - [x] Home dashboard: new `_WeakTopicsSection` above the dash cards.
+      Shows the top-3 weak topics with subject/chapter breadcrumb,
+      one-line "why" (accuracy %, due %, ease), and an
+      `auto_awesome_outlined` CTA. Tap → `/generate` with a locked
+      `GeneratePrefill` (lockTopic=true, nQuestions=8 to ratio more
+      practice MCQs).
+    - [x] `lib/src/data/seed/generated_seed_archive.dart`: best-effort
+      writes the raw TopicSeed JSON to
+      `<getApplicationDocumentsDirectory>/socdaily/generated/<yyyy-mm-dd>/<topic>.json`
+      after a successful generate. Filename safety regex strips path
+      traversal (`../etc/passwd` → `etc-passwd.json`).
+    - [x] Sync: new `SyncKinds.topicWeakness`. `SyncEngine.collectLocal`
+      snapshots all scored topics into envelopes
+      (item_key=topic_code, payload={score, mcq_accuracy, avg_ease,
+      due_ratio, attempts, cards_reviewed}). Applied on the partner
+      device via `RemoteWeaknessStore` (SharedPreferences-backed
+      JSON blob, last-write-wins on `updated_at`).
+    - [x] 12 new tests: 5× scorer (excludes untouched, accuracy ranking,
+      score range bounds, top-N cap, allScores returns every topic),
+      4× archive (writes correct path, sanitises filename, list sorted
+      newest-first, list empty when no dir), 3× weakness sync (merge
+      LWW, engine applies envelope, no-store fallback). Total
+      119/119 pass; `flutter analyze` clean (only pre-existing infos).
 
 
 ---

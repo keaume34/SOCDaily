@@ -93,4 +93,10 @@ class SyncKinds {
   /// payload mirrors the bundled `assets/seed/**.json` schema and is fed
   /// through `SeedImporter.importTopicSeed` on the receiving device.
   static const generatedSeed = 'generated_seed';
+
+  /// Per-topic weakness score (P14.C). Item key is the topic code; payload
+  /// is `{ score: 0..1, mcq_accuracy: 0..1?, avg_ease: number?, due_ratio: 0..1,
+  /// attempts: int, cards_reviewed: int }`. Cross-device merge keeps the
+  /// most recently computed score (last-write-wins on `updated_at`).
+  static const topicWeakness = 'topic_weakness';
 }

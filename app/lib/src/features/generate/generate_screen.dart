@@ -16,6 +16,7 @@ import 'package:go_router/go_router.dart';
 import '../../ai/content_generator.dart';
 import '../../ai/generator_settings.dart';
 import '../../data/db/content_repository.dart';
+import '../../data/seed/generated_seed_archive.dart';
 import '../../data/seed/seed_importer.dart';
 import '../../sync/sync_controller.dart';
 import '../../theme/gradient_background.dart';
@@ -181,6 +182,8 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
       );
       final seed = await svc.generate(req);
       final result = await SeedImporter(db).importTopicSeed(seed);
+      // Best-effort: archive raw JSON to <docs>/socdaily/generated/<day>/.
+      await ref.read(generatedSeedArchiveProvider).archive(seed);
       // Best-effort: notify the partner device.
       await ref.read(syncControllerProvider.notifier).pushGeneratedSeed(
             topicCode: req.topicCode,

@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/db/content_repository.dart';
 import '../features/settings/settings_controller.dart';
 import 'device_id.dart';
+import 'remote_weakness_store.dart';
 import 'sync_config.dart';
 import 'sync_engine.dart';
 import 'sync_remote.dart';
@@ -187,7 +188,9 @@ class SyncController extends Notifier<SyncState> {
     state = state.copyWith(mode: SyncMode.syncing, clearError: true);
     try {
       final db = ref.read(appDatabaseProvider);
-      final engine = SyncEngine(db, _ensureRemote());
+      final store = ref.read(remoteWeaknessStoreProvider);
+      final engine = SyncEngine(db, _ensureRemote(),
+          remoteWeaknessStore: store);
       final result = await engine.sync(
         code: code,
         myDeviceId: _deviceId(),
