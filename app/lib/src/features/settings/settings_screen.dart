@@ -258,24 +258,29 @@ class _AccentSwatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final ring = selected
-        ? Theme.of(context).colorScheme.onSurface
-        : Theme.of(context).colorScheme.outlineVariant;
     return Semantics(
       label: accent.label,
       selected: selected,
       button: true,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           width: 56,
           height: 56,
           decoration: BoxDecoration(
             gradient: accent.accentGradient(brightness),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: ring, width: selected ? 2.4 : 1.0),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: accent.deep.withOpacity(0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : [],
           ),
           alignment: Alignment.center,
           child: selected

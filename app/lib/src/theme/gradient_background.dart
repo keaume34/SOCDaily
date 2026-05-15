@@ -1,7 +1,7 @@
-// Reusable gradient surface backgrounds for the "Cute Sentinel" design system.
+// Reusable gradient surface backgrounds for the "Soft Styles" design system.
 //
-// Layered gradients create depth without heaviness: a subtle accent glow in
-// one corner, a cool/warm wash in the opposite, and neutral in between.
+// Warm, creamy gradients with gentle accent washes. No harsh edges —
+// everything feels soft and inviting.
 
 import 'package:flutter/material.dart';
 
@@ -11,7 +11,7 @@ class GradientBackground extends StatelessWidget {
   const GradientBackground({
     required this.accent,
     required this.child,
-    this.intensity = 0.08,
+    this.intensity = 0.06,
     this.showOrbGlow = true,
     super.key,
   });
@@ -26,29 +26,29 @@ class GradientBackground extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final base = Theme.of(context).colorScheme.surface;
 
-    final accentGlow = Color.alphaBlend(
-      accent.deep.withOpacity(isDark ? intensity * 0.6 : intensity),
+    final accentWash = Color.alphaBlend(
+      accent.soft.withOpacity(isDark ? intensity * 0.5 : intensity),
       base,
     );
     final warmCorner = isDark
         ? Color.alphaBlend(
-            const Color(0xFF1A1520).withOpacity(0.4), base)
+            const Color(0xFF1E1530).withOpacity(0.3), base)
         : Color.alphaBlend(
-            const Color(0xFFF5F0FF).withOpacity(0.3), base);
+            const Color(0xFFFFF5EE).withOpacity(0.4), base);
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [accentGlow, base, warmCorner],
-          stops: const [0.0, 0.5, 1.0],
+          colors: [accentWash, base, warmCorner],
+          stops: const [0.0, 0.55, 1.0],
         ),
       ),
       child: showOrbGlow
           ? CustomPaint(
-              painter: _OrbGlowPainter(
-                color: accent.deep.withOpacity(isDark ? 0.03 : 0.04),
+              painter: _SoftGlowPainter(
+                color: accent.soft.withOpacity(isDark ? 0.04 : 0.06),
               ),
               child: child,
             )
@@ -57,25 +57,26 @@ class GradientBackground extends StatelessWidget {
   }
 }
 
-class _OrbGlowPainter extends CustomPainter {
-  _OrbGlowPainter({required this.color});
+class _SoftGlowPainter extends CustomPainter {
+  _SoftGlowPainter({required this.color});
   final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..shader = RadialGradient(
-        center: const Alignment(0.7, -0.5),
-        radius: 0.8,
+        center: const Alignment(0.6, -0.6),
+        radius: 1.0,
         colors: [color, color.withOpacity(0)],
       ).createShader(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, paint);
   }
 
   @override
-  bool shouldRepaint(_OrbGlowPainter old) => old.color != color;
+  bool shouldRepaint(_SoftGlowPainter old) => old.color != color;
 }
 
+/// Soft accent badge / chip.
 class AccentChip extends StatelessWidget {
   const AccentChip({
     required this.label,
@@ -92,22 +93,18 @@ class AccentChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isDark
-            ? accent.deep.withOpacity(0.12)
-            : accent.soft.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: accent.deep.withOpacity(isDark ? 0.2 : 0.15),
-          width: 1,
-        ),
+            ? accent.soft.withOpacity(0.12)
+            : accent.soft.withOpacity(0.45),
+        borderRadius: BorderRadius.circular(50),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 16, color: accent.deep),
+            Icon(icon, size: 15, color: accent.deep),
             const SizedBox(width: 6),
           ],
           Text(
@@ -116,7 +113,7 @@ class AccentChip extends StatelessWidget {
               fontFamily: 'PlusJakartaSans',
               fontWeight: FontWeight.w600,
               color: isDark
-                  ? Colors.white.withOpacity(0.9)
+                  ? Colors.white.withOpacity(0.85)
                   : accent.deep,
               fontSize: 13,
             ),
@@ -127,12 +124,12 @@ class AccentChip extends StatelessWidget {
   }
 }
 
-/// A frosted-glass container for elevated content sections.
+/// Soft elevated card — uses subtle shadow instead of borders.
 class GlassCard extends StatelessWidget {
   const GlassCard({
     required this.child,
     this.padding = const EdgeInsets.all(20),
-    this.borderRadius = 20.0,
+    this.borderRadius = 24.0,
     super.key,
   });
 
@@ -147,15 +144,18 @@ class GlassCard extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withOpacity(0.04)
-            : Colors.white.withOpacity(0.7),
+            ? Colors.white.withOpacity(0.05)
+            : Colors.white,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withOpacity(0.08)
-              : Colors.black.withOpacity(0.05),
-          width: 1,
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : const Color(0xFFD4C9BE).withOpacity(0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: child,
     );

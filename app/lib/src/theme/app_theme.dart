@@ -1,10 +1,11 @@
-// ThemeData generator for SOCDaily — "Cute Sentinel" design system.
+// ThemeData generator for SOCDaily — "Soft Styles" design system.
 //
 // Produces a Material 3 theme keyed off (brightness, accent) with:
-// - Warm, layered surfaces with subtle depth
-// - Glass-morphism card effects
-// - Refined typography pairing (Quicksand headlines + Plus Jakarta Sans body)
-// - Smooth, professional color transitions between light ↔ dark
+// - Creamy, warm surfaces with pastel depth
+// - Soft shadow cards instead of hard borders
+// - Rounded, friendly shapes (24px radius)
+// - Gentle typography pairing (Quicksand headlines + Plus Jakarta Sans body)
+// - Muted contrast for easy-on-the-eyes reading
 
 import 'package:flutter/material.dart';
 
@@ -21,26 +22,25 @@ class AppTheme {
       brightness: brightness,
     );
 
-    // Warm surface tones instead of pure black/white
     final surface = isDark
-        ? const Color(0xFF0D1117) // warm near-black with blue tint
-        : const Color(0xFFF8F9FC); // warm near-white with cool tint
+        ? const Color(0xFF1A1A2E) // soft navy-purple
+        : const Color(0xFFFAF8F5); // warm cream
 
     final surfaceContainer = isDark
-        ? const Color(0xFF161B22)
-        : const Color(0xFFF0F2F6);
+        ? const Color(0xFF222240)
+        : const Color(0xFFF3F0EB);
 
     final surfaceContainerHigh = isDark
-        ? const Color(0xFF1C2128)
-        : const Color(0xFFE8EBF0);
+        ? const Color(0xFF2A2A4A)
+        : const Color(0xFFEDE9E3);
 
     final cardSurface = isDark
-        ? const Color(0xFF161B22)
+        ? const Color(0xFF222240)
         : Colors.white;
 
     final dividerColor = isDark
-        ? Colors.white.withOpacity(0.08)
-        : Colors.black.withOpacity(0.06);
+        ? Colors.white.withOpacity(0.07)
+        : const Color(0xFFE8E2DA);
 
     final updatedScheme = scheme.copyWith(
       surface: surface,
@@ -57,94 +57,99 @@ class AppTheme {
       textTheme: _textTheme(brightness),
       splashFactory: InkSparkle.splashFactory,
 
-      // ── Cards: glassmorphism-lite ──
+      // ── Cards: soft shadow, no border ──
       cardTheme: CardThemeData(
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isDark
-                ? Colors.white.withOpacity(0.06)
-                : Colors.black.withOpacity(0.05),
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide.none,
         ),
-        color: cardSurface.withOpacity(isDark ? 0.6 : 0.85),
+        color: cardSurface,
+        shadowColor: isDark
+            ? Colors.black.withOpacity(0.3)
+            : const Color(0xFFD4C9BE).withOpacity(0.3),
       ),
 
-      // ── Filled buttons ──
+      // ── Filled buttons: pill shape ──
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(50),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
           elevation: 0,
           textStyle: const TextStyle(
             fontFamily: _bodyFamily,
             fontWeight: FontWeight.w600,
             fontSize: 15,
-            letterSpacing: 0.1,
+            letterSpacing: 0.2,
           ),
         ),
       ),
 
-      // ── Outlined buttons ──
+      // ── Outlined buttons: pill shape, soft border ──
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(50),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
           side: BorderSide(
-            color: accent.deep.withOpacity(0.3),
-            width: 1,
+            color: isDark
+                ? Colors.white.withOpacity(0.12)
+                : const Color(0xFFD4C9BE),
+            width: 1.5,
           ),
         ),
       ),
 
-      // ── Input fields ──
+      // ── Text buttons ──
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        ),
+      ),
+
+      // ── Input fields: soft rounded ──
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surfaceContainer.withOpacity(isDark ? 0.5 : 0.7),
+        fillColor: isDark
+            ? Colors.white.withOpacity(0.05)
+            : const Color(0xFFF5F1EC),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: dividerColor,
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide(
-            color: accent.deep.withOpacity(0.5),
+            color: accent.deep.withOpacity(0.4),
             width: 1.5,
           ),
         ),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
 
-      // ── Bottom navigation ──
+      // ── Bottom navigation: soft, floaty ──
       navigationBarTheme: NavigationBarThemeData(
         height: 72,
         elevation: 0,
         backgroundColor: isDark
-            ? const Color(0xFF0D1117).withOpacity(0.95)
-            : Colors.white.withOpacity(0.95),
+            ? const Color(0xFF1A1A2E).withOpacity(0.97)
+            : Colors.white.withOpacity(0.97),
         surfaceTintColor: Colors.transparent,
-        indicatorColor: accent.soft.withOpacity(isDark ? 0.25 : 0.50),
+        indicatorColor: accent.soft.withOpacity(isDark ? 0.30 : 0.55),
         indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(
-            color: accent.deep.withOpacity(0.3),
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(50),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
@@ -154,7 +159,7 @@ class AppTheme {
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             color: selected
                 ? accent.deep
-                : updatedScheme.onSurfaceVariant.withOpacity(0.7),
+                : updatedScheme.onSurfaceVariant.withOpacity(0.6),
             letterSpacing: 0.2,
           );
         }),
@@ -163,13 +168,13 @@ class AppTheme {
           return IconThemeData(
             color: selected
                 ? accent.deep
-                : updatedScheme.onSurfaceVariant.withOpacity(0.6),
+                : updatedScheme.onSurfaceVariant.withOpacity(0.5),
             size: 22,
           );
         }),
       ),
 
-      // ── App bar ──
+      // ── App bar: transparent, soft title ──
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: updatedScheme.onSurface,
@@ -192,21 +197,21 @@ class AppTheme {
         space: 1,
       ),
 
-      // ── Chip ──
+      // ── Chip: soft rounded ──
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(50),
         ),
-        side: BorderSide(
-          color: dividerColor,
-          width: 1,
-        ),
+        side: BorderSide.none,
+        backgroundColor: isDark
+            ? Colors.white.withOpacity(0.06)
+            : const Color(0xFFF0EBE4),
       ),
 
-      // ── Dialog ──
+      // ── Dialog: large radius ──
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
         ),
         backgroundColor: cardSurface,
       ),
@@ -215,15 +220,24 @@ class AppTheme {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: cardSurface,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
       ),
 
-      // ── Snackbar ──
+      // ── Snackbar: pill shape ──
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(50),
+        ),
+      ),
+
+      // ── Icon buttons: softer ──
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
     );
@@ -237,26 +251,23 @@ class AppTheme {
         ? Typography.whiteMountainView
         : Typography.blackMountainView;
     return base.copyWith(
-      // ── Display: big hero numbers / splash text ──
       displayLarge: base.displayLarge?.copyWith(
         fontFamily: _headlineFamily,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w700,
         letterSpacing: -1.5,
         height: 1.1,
       ),
       displayMedium: base.displayMedium?.copyWith(
         fontFamily: _headlineFamily,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w700,
         letterSpacing: -1.0,
         height: 1.15,
       ),
       displaySmall: base.displaySmall?.copyWith(
         fontFamily: _headlineFamily,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         letterSpacing: -0.5,
       ),
-
-      // ── Headlines: section titles ──
       headlineLarge: base.headlineLarge?.copyWith(
         fontFamily: _headlineFamily,
         fontWeight: FontWeight.w700,
@@ -264,7 +275,7 @@ class AppTheme {
       ),
       headlineMedium: base.headlineMedium?.copyWith(
         fontFamily: _headlineFamily,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         letterSpacing: -0.3,
       ),
       headlineSmall: base.headlineSmall?.copyWith(
@@ -272,11 +283,9 @@ class AppTheme {
         fontWeight: FontWeight.w600,
         letterSpacing: -0.2,
       ),
-
-      // ── Titles: card headers, nav ──
       titleLarge: base.titleLarge?.copyWith(
         fontFamily: _headlineFamily,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         letterSpacing: -0.1,
       ),
       titleMedium: base.titleMedium?.copyWith(
@@ -286,30 +295,26 @@ class AppTheme {
       ),
       titleSmall: base.titleSmall?.copyWith(
         fontFamily: _bodyFamily,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
       ),
-
-      // ── Body: readable paragraphs ──
       bodyLarge: base.bodyLarge?.copyWith(
         fontFamily: _bodyFamily,
-        height: 1.5,
-        letterSpacing: 0.1,
+        height: 1.6,
+        letterSpacing: 0.15,
       ),
       bodyMedium: base.bodyMedium?.copyWith(
         fontFamily: _bodyFamily,
-        height: 1.5,
+        height: 1.55,
         letterSpacing: 0.1,
       ),
       bodySmall: base.bodySmall?.copyWith(
         fontFamily: _bodyFamily,
         height: 1.4,
       ),
-
-      // ── Labels: chips, buttons ──
       labelLarge: base.labelLarge?.copyWith(
         fontFamily: _bodyFamily,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.2,
+        letterSpacing: 0.3,
       ),
       labelMedium: base.labelMedium?.copyWith(
         fontFamily: _bodyFamily,
@@ -318,7 +323,7 @@ class AppTheme {
       labelSmall: base.labelSmall?.copyWith(
         fontFamily: _bodyFamily,
         fontWeight: FontWeight.w500,
-        letterSpacing: 0.8,
+        letterSpacing: 0.5,
       ),
     );
   }

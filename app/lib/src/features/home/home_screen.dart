@@ -1,5 +1,5 @@
 // Home screen: dashboard with hero greeting, stat chips, feature grid,
-// and weak-areas section. Responsive: 2-column grid on wide screens.
+// and weak-areas section. "Soft Styles" — rounded, warm, shadow-based.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -131,11 +131,16 @@ class _HeroSection extends StatelessWidget {
                   accent.soft.withOpacity(0.15),
                 ],
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: accent.deep.withOpacity(isDark ? 0.15 : 0.1),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? accent.deep.withOpacity(0.15)
+                : accent.soft.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -250,12 +255,17 @@ class _MiniStatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark
             ? color.withOpacity(0.08)
-            : color.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withOpacity(isDark ? 0.15 : 0.1),
-          width: 1,
-        ),
+            : color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.15)
+                : color.withOpacity(0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,15 +414,18 @@ class _FeatureCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.04)
-              : Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withOpacity(0.06)
-                : Colors.black.withOpacity(0.05),
-            width: 1,
-          ),
+              ? Colors.white.withOpacity(0.06)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? Colors.black.withOpacity(0.15)
+                  : const Color(0xFFD4C9BE).withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Material(
           color: Colors.transparent,
@@ -552,15 +565,18 @@ class _WeakTopicsSection extends ConsumerWidget {
                         horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.white.withOpacity(0.03)
-                          : Colors.white.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.05)
-                            : Colors.black.withOpacity(0.04),
-                        width: 1,
-                      ),
+                          ? Colors.white.withOpacity(0.05)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark
+                              ? Colors.black.withOpacity(0.12)
+                              : const Color(0xFFD4C9BE).withOpacity(0.15),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
@@ -642,11 +658,7 @@ class AccentChip extends StatelessWidget {
         color: isDark
             ? accent.deep.withOpacity(0.12)
             : accent.soft.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: accent.deep.withOpacity(isDark ? 0.2 : 0.15),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(50),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

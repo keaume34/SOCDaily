@@ -142,20 +142,22 @@ class _FlashcardFace extends StatelessWidget {
             ? Colors.white.withOpacity(0.04)
             : Colors.white.withOpacity(0.8));
 
-    final borderColor = isBack
-        ? primary.withOpacity(isDark ? 0.2 : 0.12)
-        : (isDark
-            ? Colors.white.withOpacity(0.06)
-            : Colors.black.withOpacity(0.05));
-
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 320),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: borderColor, width: 1),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : const Color(0xFFD4C9BE).withOpacity(0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,12 +219,7 @@ class _FlashcardFace extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: const Color(0xFFF59E0B).withOpacity(isDark ? 0.1 : 0.06),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFFF59E0B)
-                      .withOpacity(isDark ? 0.15 : 0.1),
-                  width: 1,
-                ),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
                 children: [

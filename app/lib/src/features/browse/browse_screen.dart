@@ -115,20 +115,23 @@ class _SubjectCard extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.04)
-              : Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withOpacity(0.06)
-                : Colors.black.withOpacity(0.05),
-            width: 1,
-          ),
+              ? Colors.white.withOpacity(0.06)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? Colors.black.withOpacity(0.15)
+                  : const Color(0xFFD4C9BE).withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(22),
             onTap: () => context.push('/browse/subject/${subject.id}'),
             child: Padding(
               padding: const EdgeInsets.all(18),
@@ -241,20 +244,23 @@ class SubjectDetailScreen extends ConsumerWidget {
                           child: Container(
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? Colors.white.withOpacity(0.04)
-                                  : Colors.white.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: isDark
-                                    ? Colors.white.withOpacity(0.06)
-                                    : Colors.black.withOpacity(0.05),
-                                width: 1,
-                              ),
+                                  ? Colors.white.withOpacity(0.06)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(22),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isDark
+                                      ? Colors.black.withOpacity(0.15)
+                                      : const Color(0xFFD4C9BE).withOpacity(0.2),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
                             ),
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(18),
+                                borderRadius: BorderRadius.circular(22),
                                 onTap: () =>
                                     context.push('/browse/chapter/${c.id}'),
                                 child: Padding(
@@ -381,20 +387,23 @@ class _TopicCard extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.04)
-              : Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withOpacity(0.06)
-                : Colors.black.withOpacity(0.05),
-            width: 1,
-          ),
+              ? Colors.white.withOpacity(0.06)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? Colors.black.withOpacity(0.15)
+                  : const Color(0xFFD4C9BE).withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(22),
             onTap: () => context.push('/study/topic/${topic.id}'),
             child: Padding(
               padding: const EdgeInsets.all(18),

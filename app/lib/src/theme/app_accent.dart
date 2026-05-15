@@ -37,8 +37,8 @@ enum AppAccent {
   /// given [brightness].
   LinearGradient accentGradient(Brightness brightness) {
     final pairedEnd = brightness == Brightness.dark
-        ? const Color(0xFF0B0F14)
-        : Colors.white;
+        ? const Color(0xFF1A1A2E)
+        : const Color(0xFFFAF8F5);
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,

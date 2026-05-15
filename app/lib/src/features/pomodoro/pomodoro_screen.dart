@@ -172,11 +172,7 @@ class _PhaseChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
         color: fg.withOpacity(isDark ? 0.12 : 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: fg.withOpacity(isDark ? 0.2 : 0.15),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(50),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

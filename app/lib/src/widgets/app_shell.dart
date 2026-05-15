@@ -1,6 +1,5 @@
 // Responsive app scaffold: bottom nav on mobile, side rail on tablet/web.
-// Uses [StatefulShellRoute] from go_router so each tab keeps its own
-// navigation stack, preserving scroll position and pushed routes.
+// "Soft Styles" — rounded, warm, shadow-based separation.
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -52,13 +51,6 @@ class AppShell extends StatelessWidget {
               onTap: _onTap,
               isDark: isDark,
             ),
-            // Subtle divider
-            Container(
-              width: 1,
-              color: isDark
-                  ? Colors.white.withOpacity(0.06)
-                  : Colors.black.withOpacity(0.05),
-            ),
             Expanded(child: navigationShell),
           ],
         ),
@@ -67,29 +59,17 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: isDark
-                  ? Colors.white.withOpacity(0.06)
-                  : Colors.black.withOpacity(0.05),
-              width: 1,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: _onTap,
+        destinations: [
+          for (final d in destinations)
+            NavigationDestination(
+              icon: Icon(d.icon),
+              selectedIcon: Icon(d.selectedIcon),
+              label: d.label,
             ),
-          ),
-        ),
-        child: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: _onTap,
-          destinations: [
-            for (final d in destinations)
-              NavigationDestination(
-                icon: Icon(d.icon),
-                selectedIcon: Icon(d.selectedIcon),
-                label: d.label,
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -113,33 +93,36 @@ class _SideRail extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       width: 80,
-      color: isDark
-          ? const Color(0xFF0D1117)
-          : const Color(0xFFF8F9FC),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF1A1A2E)
+            : const Color(0xFFFAF8F5),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.15)
+                : const Color(0xFFD4C9BE).withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(2, 0),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           const SizedBox(height: 16),
-          // Logo area
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.primary.withOpacity(0.7),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(14),
+              color: theme.colorScheme.primary.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'S',
                 style: TextStyle(
                   fontFamily: 'Quicksand',
-                  color: Colors.white,
+                  color: theme.colorScheme.primary,
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                 ),
@@ -147,7 +130,6 @@ class _SideRail extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          // Nav items
           for (int i = 0; i < destinations.length; i++) ...[
             _RailItem(
               icon: i == selectedIndex
@@ -186,21 +168,21 @@ class _RailItem extends StatelessWidget {
     final theme = Theme.of(context);
     final color = selected
         ? theme.colorScheme.primary
-        : theme.colorScheme.onSurfaceVariant.withOpacity(0.6);
+        : theme.colorScheme.onSurfaceVariant.withOpacity(0.5);
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
         width: 64,
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: selected
-              ? theme.colorScheme.primary.withOpacity(isDark ? 0.12 : 0.08)
+              ? theme.colorScheme.primary.withOpacity(isDark ? 0.10 : 0.07)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
