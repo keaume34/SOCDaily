@@ -1,6 +1,5 @@
-// Flashcard widget: front/back content with a flip animation and swipe-to-
-// continue gesture. The parent owns "next/prev" navigation — this widget
-// only emits onFlip and onSwipeNext callbacks.
+// Flashcard widget: front/back with 3D flip animation, swipe-to-continue,
+// and improved glass-card styling.
 
 import 'dart:math' as math;
 
@@ -132,47 +131,69 @@ class _FlashcardFace extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+
     final bg = isBack
-        ? theme.colorScheme.primary.withOpacity(0.06)
-        : theme.colorScheme.surfaceContainerHighest.withOpacity(0.6);
+        ? (isDark
+            ? primary.withOpacity(0.08)
+            : primary.withOpacity(0.04))
+        : (isDark
+            ? Colors.white.withOpacity(0.04)
+            : Colors.white.withOpacity(0.8));
+
+    final borderColor = isBack
+        ? primary.withOpacity(isDark ? 0.2 : 0.12)
+        : (isDark
+            ? Colors.white.withOpacity(0.06)
+            : Colors.black.withOpacity(0.05));
 
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 320),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [bg, theme.colorScheme.surface],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
-        ),
+        color: bg,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text(
-                label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  letterSpacing: 1.4,
-                  color: theme.colorScheme.onSurfaceVariant,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isBack
+                      ? primary.withOpacity(isDark ? 0.12 : 0.08)
+                      : (isDark
+                          ? Colors.white.withOpacity(0.06)
+                          : Colors.black.withOpacity(0.04)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w600,
+                    color: isBack
+                        ? primary
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
               const Spacer(),
               if (!isBack)
                 Icon(
-                  Icons.touch_app_outlined,
+                  Icons.touch_app_rounded,
                   size: 18,
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Expanded(
             child: Center(
               child: SingleChildScrollView(
@@ -195,18 +216,22 @@ class _FlashcardFace extends StatelessWidget {
                 vertical: 8,
               ),
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondaryContainer
-                    .withOpacity(0.4),
+                color: const Color(0xFFF59E0B).withOpacity(isDark ? 0.1 : 0.06),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFFF59E0B)
+                      .withOpacity(isDark ? 0.15 : 0.1),
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.lightbulb_outline,
+                  const Icon(
+                    Icons.lightbulb_rounded,
                     size: 16,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: Color(0xFFF59E0B),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       hint!,
@@ -229,12 +254,13 @@ class _FlashcardFace extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
-                      vertical: 3,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(999),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.06)
+                          : Colors.black.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '#$t',

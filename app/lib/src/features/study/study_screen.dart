@@ -25,9 +25,9 @@ class StudyScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.school_outlined,
+                  Icons.school_rounded,
                   size: 56,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(

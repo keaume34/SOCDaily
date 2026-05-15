@@ -1,55 +1,81 @@
-// Reusable gradient surface backgrounds used across feature screens to give
-// the app the "monochrome with a touch of accent" feel the user asked for.
+// Reusable gradient surface backgrounds for the "Cute Sentinel" design system.
+//
+// Layered gradients create depth without heaviness: a subtle accent glow in
+// one corner, a cool/warm wash in the opposite, and neutral in between.
 
 import 'package:flutter/material.dart';
 
 import 'app_accent.dart';
 
-/// Subtle full-screen gradient: near-surface → near-surface with the accent
-/// barely peeking through one corner. Designed to feel like a soft sheen,
-/// not a colorful poster.
 class GradientBackground extends StatelessWidget {
   const GradientBackground({
     required this.accent,
     required this.child,
-    this.intensity = 0.12,
+    this.intensity = 0.08,
+    this.showOrbGlow = true,
     super.key,
   });
 
   final AppAccent accent;
   final Widget child;
-
-  /// 0 = pure monochrome, 1 = full accent. Default 0.12 keeps it professional.
   final double intensity;
+  final bool showOrbGlow;
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final base = Theme.of(context).colorScheme.surface;
-    final corner = Color.alphaBlend(
-      accent.deep.withOpacity(intensity),
+
+    final accentGlow = Color.alphaBlend(
+      accent.deep.withOpacity(isDark ? intensity * 0.6 : intensity),
       base,
     );
-    final far = brightness == Brightness.dark
-        ? Color.alphaBlend(Colors.black.withOpacity(0.6), base)
-        : Color.alphaBlend(Colors.white.withOpacity(0.5), base);
+    final warmCorner = isDark
+        ? Color.alphaBlend(
+            const Color(0xFF1A1520).withOpacity(0.4), base)
+        : Color.alphaBlend(
+            const Color(0xFFF5F0FF).withOpacity(0.3), base);
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [corner, base, far],
-          stops: const [0.0, 0.55, 1.0],
+          colors: [accentGlow, base, warmCorner],
+          stops: const [0.0, 0.5, 1.0],
         ),
       ),
-      child: child,
+      child: showOrbGlow
+          ? CustomPaint(
+              painter: _OrbGlowPainter(
+                color: accent.deep.withOpacity(isDark ? 0.03 : 0.04),
+              ),
+              child: child,
+            )
+          : child,
     );
   }
 }
 
-/// A pill-shaped chip with a soft monochrome-plus-accent gradient. Used for
-/// streak counters, category badges, etc.
+class _OrbGlowPainter extends CustomPainter {
+  _OrbGlowPainter({required this.color});
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0.7, -0.5),
+        radius: 0.8,
+        colors: [color, color.withOpacity(0)],
+      ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, paint);
+  }
+
+  @override
+  bool shouldRepaint(_OrbGlowPainter old) => old.color != color;
+}
+
 class AccentChip extends StatelessWidget {
   const AccentChip({
     required this.label,
@@ -64,22 +90,16 @@ class AccentChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final base = brightness == Brightness.dark ? Colors.black : Colors.white;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.alphaBlend(accent.deep.withOpacity(0.18), base),
-            base,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(999),
+        color: isDark
+            ? accent.deep.withOpacity(0.12)
+            : accent.soft.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: accent.deep.withOpacity(0.3),
+          color: accent.deep.withOpacity(isDark ? 0.2 : 0.15),
           width: 1,
         ),
       ),
@@ -93,13 +113,51 @@ class AccentChip extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
+              fontFamily: 'PlusJakartaSans',
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: isDark
+                  ? Colors.white.withOpacity(0.9)
+                  : accent.deep,
               fontSize: 13,
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A frosted-glass container for elevated content sections.
+class GlassCard extends StatelessWidget {
+  const GlassCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(20),
+    this.borderRadius = 20.0,
+    super.key,
+  });
+
+  final Widget child;
+  final EdgeInsets padding;
+  final double borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withOpacity(0.04)
+            : Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.08)
+              : Colors.black.withOpacity(0.05),
+          width: 1,
+        ),
+      ),
+      child: child,
     );
   }
 }

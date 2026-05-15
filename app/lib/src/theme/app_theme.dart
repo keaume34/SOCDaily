@@ -1,9 +1,10 @@
-// ThemeData generator for SOCDaily.
+// ThemeData generator for SOCDaily — "Cute Sentinel" design system.
 //
-// Produces a Material 3 theme keyed off (brightness, accent) so the user can
-// switch accents at runtime without restarting the app. Light surfaces are a
-// near-white gradient, dark surfaces a near-black gradient — buttons and focus
-// states pick up the user-selected accent.
+// Produces a Material 3 theme keyed off (brightness, accent) with:
+// - Warm, layered surfaces with subtle depth
+// - Glass-morphism card effects
+// - Refined typography pairing (Quicksand headlines + Plus Jakarta Sans body)
+// - Smooth, professional color transitions between light ↔ dark
 
 import 'package:flutter/material.dart';
 
@@ -14,103 +15,218 @@ class AppTheme {
     required Brightness brightness,
     required AppAccent accent,
   }) {
+    final isDark = brightness == Brightness.dark;
     final scheme = ColorScheme.fromSeed(
       seedColor: accent.deep,
       brightness: brightness,
     );
 
-    final surface = brightness == Brightness.dark
-        ? const Color(0xFF0B0F14)
-        : const Color(0xFFFAFBFC);
+    // Warm surface tones instead of pure black/white
+    final surface = isDark
+        ? const Color(0xFF0D1117) // warm near-black with blue tint
+        : const Color(0xFFF8F9FC); // warm near-white with cool tint
 
-    final base = ThemeData(
+    final surfaceContainer = isDark
+        ? const Color(0xFF161B22)
+        : const Color(0xFFF0F2F6);
+
+    final surfaceContainerHigh = isDark
+        ? const Color(0xFF1C2128)
+        : const Color(0xFFE8EBF0);
+
+    final cardSurface = isDark
+        ? const Color(0xFF161B22)
+        : Colors.white;
+
+    final dividerColor = isDark
+        ? Colors.white.withOpacity(0.08)
+        : Colors.black.withOpacity(0.06);
+
+    final updatedScheme = scheme.copyWith(
+      surface: surface,
+      surfaceContainerHighest: surfaceContainerHigh,
+      surfaceContainerHigh: surfaceContainer,
+      outlineVariant: dividerColor,
+    );
+
+    return ThemeData(
       brightness: brightness,
-      colorScheme: scheme.copyWith(surface: surface),
+      colorScheme: updatedScheme,
       useMaterial3: true,
       scaffoldBackgroundColor: surface,
       textTheme: _textTheme(brightness),
+      splashFactory: InkSparkle.splashFactory,
+
+      // ── Cards: glassmorphism-lite ──
       cardTheme: CardThemeData(
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-            color: scheme.outlineVariant.withOpacity(0.6),
+            color: isDark
+                ? Colors.white.withOpacity(0.06)
+                : Colors.black.withOpacity(0.05),
             width: 1,
           ),
         ),
-        color: scheme.surfaceContainerHighest.withOpacity(0.6),
+        color: cardSurface.withOpacity(isDark ? 0.6 : 0.85),
       ),
+
+      // ── Filled buttons ──
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          elevation: 0,
           textStyle: const TextStyle(
+            fontFamily: _bodyFamily,
             fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
+            fontSize: 15,
+            letterSpacing: 0.1,
           ),
         ),
       ),
+
+      // ── Outlined buttons ──
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          side: BorderSide(
+            color: accent.deep.withOpacity(0.3),
+            width: 1,
+          ),
         ),
       ),
+
+      // ── Input fields ──
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surfaceContainerHighest.withOpacity(0.5),
+        fillColor: surfaceContainer.withOpacity(isDark ? 0.5 : 0.7),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: dividerColor,
+            width: 1,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: accent.deep.withOpacity(0.5),
+            width: 1.5,
+          ),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
+
+      // ── Bottom navigation ──
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: scheme.surface,
-        indicatorColor: accent.soft.withOpacity(0.70),
+        height: 72,
+        elevation: 0,
+        backgroundColor: isDark
+            ? const Color(0xFF0D1117).withOpacity(0.95)
+            : Colors.white.withOpacity(0.95),
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: accent.soft.withOpacity(isDark ? 0.25 : 0.50),
         indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: accent.deep, width: 1),
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(
+            color: accent.deep.withOpacity(0.3),
+            width: 1,
+          ),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
-            fontSize: 12,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected ? accent.deep : scheme.onSurfaceVariant,
+            fontFamily: _bodyFamily,
+            fontSize: 11,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected
+                ? accent.deep
+                : updatedScheme.onSurfaceVariant.withOpacity(0.7),
+            letterSpacing: 0.2,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? accent.deep : scheme.onSurfaceVariant,
-            size: 24,
+            color: selected
+                ? accent.deep
+                : updatedScheme.onSurfaceVariant.withOpacity(0.6),
+            size: 22,
           );
         }),
       ),
+
+      // ── App bar ──
       appBarTheme: AppBarTheme(
-        backgroundColor: scheme.surface,
-        foregroundColor: scheme.onSurface,
+        backgroundColor: Colors.transparent,
+        foregroundColor: updatedScheme.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
           fontFamily: _headlineFamily,
-          color: scheme.onSurface,
-          fontSize: 20,
+          color: updatedScheme.onSurface,
+          fontSize: 22,
           fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
+          letterSpacing: -0.3,
+        ),
+      ),
+
+      // ── Divider ──
+      dividerTheme: DividerThemeData(
+        color: dividerColor,
+        thickness: 1,
+        space: 1,
+      ),
+
+      // ── Chip ──
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        side: BorderSide(
+          color: dividerColor,
+          width: 1,
+        ),
+      ),
+
+      // ── Dialog ──
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        backgroundColor: cardSurface,
+      ),
+
+      // ── Bottom sheet ──
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: cardSurface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+
+      // ── Snackbar ──
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );
-
-    return base;
   }
 
   static const _headlineFamily = 'Quicksand';
@@ -121,16 +237,26 @@ class AppTheme {
         ? Typography.whiteMountainView
         : Typography.blackMountainView;
     return base.copyWith(
+      // ── Display: big hero numbers / splash text ──
       displayLarge: base.displayLarge?.copyWith(
         fontFamily: _headlineFamily,
         fontWeight: FontWeight.w800,
-        letterSpacing: -1.0,
+        letterSpacing: -1.5,
+        height: 1.1,
       ),
       displayMedium: base.displayMedium?.copyWith(
         fontFamily: _headlineFamily,
         fontWeight: FontWeight.w800,
-        letterSpacing: -0.8,
+        letterSpacing: -1.0,
+        height: 1.15,
       ),
+      displaySmall: base.displaySmall?.copyWith(
+        fontFamily: _headlineFamily,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.5,
+      ),
+
+      // ── Headlines: section titles ──
       headlineLarge: base.headlineLarge?.copyWith(
         fontFamily: _headlineFamily,
         fontWeight: FontWeight.w700,
@@ -141,33 +267,58 @@ class AppTheme {
         fontWeight: FontWeight.w700,
         letterSpacing: -0.3,
       ),
+      headlineSmall: base.headlineSmall?.copyWith(
+        fontFamily: _headlineFamily,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.2,
+      ),
+
+      // ── Titles: card headers, nav ──
       titleLarge: base.titleLarge?.copyWith(
         fontFamily: _headlineFamily,
         fontWeight: FontWeight.w700,
+        letterSpacing: -0.1,
       ),
       titleMedium: base.titleMedium?.copyWith(
         fontFamily: _bodyFamily,
         fontWeight: FontWeight.w600,
+        letterSpacing: 0,
       ),
+      titleSmall: base.titleSmall?.copyWith(
+        fontFamily: _bodyFamily,
+        fontWeight: FontWeight.w600,
+      ),
+
+      // ── Body: readable paragraphs ──
       bodyLarge: base.bodyLarge?.copyWith(
         fontFamily: _bodyFamily,
-        height: 1.45,
+        height: 1.5,
+        letterSpacing: 0.1,
       ),
       bodyMedium: base.bodyMedium?.copyWith(
         fontFamily: _bodyFamily,
-        height: 1.45,
+        height: 1.5,
+        letterSpacing: 0.1,
       ),
       bodySmall: base.bodySmall?.copyWith(
         fontFamily: _bodyFamily,
+        height: 1.4,
       ),
+
+      // ── Labels: chips, buttons ──
       labelLarge: base.labelLarge?.copyWith(
         fontFamily: _bodyFamily,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.2,
       ),
       labelMedium: base.labelMedium?.copyWith(
         fontFamily: _bodyFamily,
+        fontWeight: FontWeight.w500,
       ),
       labelSmall: base.labelSmall?.copyWith(
         fontFamily: _bodyFamily,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.8,
       ),
     );
   }
