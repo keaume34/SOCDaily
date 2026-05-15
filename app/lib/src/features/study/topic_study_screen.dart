@@ -12,6 +12,7 @@ import '../../data/db/content_repository.dart';
 import '../../data/db/user_state_repository.dart';
 import '../../pdf/pdf_source_config.dart';
 import '../../theme/gradient_background.dart';
+import '../generate/generate_screen.dart';
 import '../settings/settings_controller.dart';
 import 'study_session_controller.dart';
 import 'widgets/flashcard_view.dart';
@@ -108,7 +109,11 @@ class _SessionView extends ConsumerWidget {
         _ProgressBar(state: state),
         Expanded(
           child: state.isDone
-              ? _DoneView(state: state, onRestart: controller.restart)
+              ? _DoneView(
+                  state: state,
+                  topic: topic,
+                  onRestart: controller.restart,
+                )
               : Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                   child: _CurrentItem(
@@ -528,14 +533,19 @@ class _ProgressBar extends StatelessWidget {
   }
 }
 
-class _DoneView extends StatelessWidget {
-  const _DoneView({required this.state, required this.onRestart});
+class _DoneView extends ConsumerWidget {
+  const _DoneView({
+    required this.state,
+    required this.topic,
+    required this.onRestart,
+  });
 
   final StudySessionState state;
+  final Topic topic;
   final VoidCallback onRestart;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
@@ -571,6 +581,34 @@ class _DoneView extends StatelessWidget {
             onPressed: onRestart,
             icon: const Icon(Icons.refresh),
             label: const Text('Study again'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final db = ref.read(appDatabaseProvider);
+              final chapter = await (db.select(db.chapters)
+                    ..where((c) => c.id.equals(topic.chapterId)))
+                  .getSingleOrNull();
+              final subject = chapter == null
+                  ? null
+                  : await (db.select(db.subjects)
+                        ..where((s) => s.id.equals(chapter.subjectId)))
+                      .getSingleOrNull();
+              if (!context.mounted) return;
+              context.push(
+                '/generate',
+                extra: GeneratePrefill(
+                  subjectCode: subject?.code,
+                  subjectTitle: subject?.title,
+                  chapterCode: chapter?.code,
+                  chapterTitle: chapter?.title,
+                  topicCode: topic.code,
+                  topicTitle: topic.title,
+                ),
+              );
+            },
+            icon: const Icon(Icons.auto_awesome_outlined),
+            label: const Text('Generate more for this topic'),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(

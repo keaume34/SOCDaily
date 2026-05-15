@@ -421,20 +421,52 @@ Conventions:
       }
       → 200 application/json: TopicSeed
       ```
-  - [ ] **P14.B — Flutter side: explicit "Generate more"**
-    - [ ] New service `lib/src/ai/content_generator.dart` POSTs to
-      `/generate` with the bearer token from settings.
-    - [ ] Reuse `SeedImporter.import_topic_seed` so a generated seed
-      lands in the local SQLite the same way bundled assets do.
-    - [ ] UI: a "Generate more" button on Topic / Browse opens a modal
-      where the user picks counts + free-form hint. On success the
-      new items appear immediately.
-    - [ ] Settings exposes the generator base URL + token (mirrors the
-      existing AI tutor settings).
-    - [ ] Sync: on successful generate, push the resulting `TopicSeed`
-      JSON to Supabase under
-      `kind='generated_seed', item_key='<topic_code>'` so the user's
-      other devices get the same content on next sync.
+  - [x] **P14.B — Flutter side: explicit "Generate more"**
+    - [x] `lib/src/ai/generator_settings.dart`: `GeneratorSettings`
+      (baseUrl + token) persisted via SharedPreferences; mirrors the
+      P7 `AiSettings` pattern. `generatorSettingsControllerProvider`.
+    - [x] `lib/src/ai/content_generator.dart`: `ContentGeneratorService`
+      with `listPdfs()` (`GET /pdfs`) + `generate(GenerateRequest)`
+      (`POST /generate`) using bearer auth. 5-minute receive timeout
+      to match nginx `proxy_read_timeout` from P14.A. Server `detail`
+      messages surfaced as `GeneratorException(detail, statusCode)`.
+    - [x] `SeedImporter.importTopicSeed(Map)` + new
+      `TopicSeedImportResult`: imports an in-memory TopicSeed JSON
+      (same shape as bundled `assets/seed/**.json`). Subject + chapter
+      upsert by code; topic upsert by `(chapter_id, code)`; flashcards
+      and questions replaced atomically. User state survives because
+      it lives in separate tables keyed by row id.
+    - [x] `lib/src/features/generate/generate_screen.dart` (`/generate`):
+      full-screen form with PDF dropdown (refresh button hits
+      `/pdfs`), taxonomy fields (subject/chapter/topic code+title),
+      page-range, counts (1–20 flashcards, 0–12 MCQs), language
+      ChoiceChips (server default / vi / en / bilingual), free-form
+      hint, validation, loading state, error card with server detail,
+      success card with "Open in Study" CTA. Accepts a
+      `GeneratePrefill` via `GoRouter.extra` so callers can pre-fill
+      taxonomy or lock the topic (P14.C will lock it for "Practice
+      weak areas").
+    - [x] Settings: new "Content generator" card with base URL +
+      bearer token (masked, show/hide), "Configured / Not configured"
+      status, clear-token action.
+    - [x] Browse top app bar: `auto_awesome_outlined` icon → push
+      `/generate`. TopicStudy `_DoneView`: "Generate more for this
+      topic" button pre-fills taxonomy from the current
+      subject/chapter/topic.
+    - [x] Sync: new `SyncKinds.generatedSeed` kind +
+      `SyncEngine.applyEnvelope` calls `SeedImporter.importTopicSeed`
+      on the partner device. `SyncController.pushGeneratedSeed` is
+      called best-effort after a successful generate so the partner
+      gets the new content on next `syncNow`.
+    - [x] 15 new tests: 4× generator settings (initial empty, set+
+      persist, reload, clearToken), 5× content generator (isConfigured,
+      not-configured throws, listPdfs request shape, generate full-
+      body assertions, hint+lang omission when null, server-detail
+      surfacing on 4xx), 4× seed importer (fresh import, re-import
+      replaces in-place, two topics share a chapter, no-source-pdf
+      leaves source_id null), 2× generated-seed sync (envelope is
+      applied on partner device, second sync is idempotent). Total
+      107/107 pass; `flutter analyze` clean (only pre-existing infos).
   - [ ] **P14.C — Weakness-driven recommendations**
     - [ ] Query `user_question_state` and `user_card_state` to score
       every topic by `(mcq_accuracy_below_threshold, avg_ease,

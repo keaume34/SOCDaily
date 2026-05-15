@@ -8,14 +8,17 @@
 import 'package:drift/drift.dart';
 
 import '../data/db/app_database.dart';
+import '../data/seed/seed_importer.dart';
 import 'sync_remote.dart';
 import 'sync_types.dart';
 
 class SyncEngine {
-  SyncEngine(this._db, this._remote);
+  SyncEngine(this._db, this._remote, {SeedImporter? seedImporter})
+      : _seedImporter = seedImporter ?? SeedImporter(_db);
 
   final AppDatabase _db;
   final SyncRemote _remote;
+  final SeedImporter _seedImporter;
 
   /// Snapshots all syncable local rows for a given pairing.
   Future<List<SyncEnvelope>> collectLocalEnvelopes({
@@ -151,6 +154,13 @@ class SyncEngine {
                 createdAt: Value(env.updatedAt),
               ),
             );
+        return true;
+      case SyncKinds.generatedSeed:
+        // Idempotent: re-importing an already-imported seed is a no-op
+        // because `importTopicSeed` upserts the topic row and replaces
+        // its flashcards / questions atomically. User state lives in
+        // separate tables keyed by row id, so it survives re-import.
+        await _seedImporter.importTopicSeed(env.payload);
         return true;
       default:
         return false;

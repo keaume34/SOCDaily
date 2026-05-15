@@ -88,4 +88,9 @@ class SyncKinds {
   static const bookmark = 'bookmark';
   static const note = 'note';
   static const streak = 'streak';
+
+  /// On-demand-generated seed JSON (P14.B). Item key is the topic code; the
+  /// payload mirrors the bundled `assets/seed/**.json` schema and is fed
+  /// through `SeedImporter.importTopicSeed` on the receiving device.
+  static const generatedSeed = 'generated_seed';
 }

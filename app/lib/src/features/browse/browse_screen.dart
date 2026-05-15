@@ -42,6 +42,11 @@ class BrowseScreen extends ConsumerWidget {
                   tooltip: 'Bookmarks',
                   onPressed: () => context.push('/bookmarks'),
                 ),
+                IconButton(
+                  icon: const Icon(Icons.auto_awesome_outlined),
+                  tooltip: 'Generate more',
+                  onPressed: () => context.push('/generate'),
+                ),
                 const SizedBox(width: 4),
               ],
             ),

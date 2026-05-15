@@ -13,6 +13,7 @@ import 'device_id.dart';
 import 'sync_config.dart';
 import 'sync_engine.dart';
 import 'sync_remote.dart';
+import 'sync_types.dart';
 import 'supabase_sync_remote.dart';
 
 const _kPairCode = 'sync.pair_code';
@@ -210,6 +211,34 @@ class SyncController extends Notifier<SyncState> {
   Future<void> unpair() async {
     await _savePair(null);
     state = state.copyWith(mode: SyncMode.idle, clearPair: true);
+  }
+
+  /// Pushes a freshly-generated TopicSeed to the remote so the partner
+  /// device receives it on its next [syncNow]. No-op when the user isn't
+  /// paired or sync isn't configured — generation still works locally.
+  Future<void> pushGeneratedSeed({
+    required String topicCode,
+    required Map<String, dynamic> seed,
+  }) async {
+    if (state.mode == SyncMode.unconfigured) return;
+    final code = state.pairCode;
+    if (code == null) return;
+    try {
+      await _ensureRemote().upsertPayload(
+        SyncEnvelope(
+          code: code,
+          deviceId: _deviceId(),
+          kind: SyncKinds.generatedSeed,
+          itemKey: topicCode,
+          payload: seed,
+          updatedAt: DateTime.now().toUtc(),
+        ),
+      );
+    } catch (_) {
+      // Best-effort: a failed push doesn't surface as an error in the UI
+      // because the seed already landed in the local DB. The next
+      // [syncNow] will retry via the regular round-trip.
+    }
   }
 }
 

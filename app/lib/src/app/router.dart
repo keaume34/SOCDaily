@@ -10,6 +10,7 @@ import '../features/onboarding/onboarding_screen.dart';
 import '../features/certificate/certificate_screen.dart';
 import '../features/cheatsheet/cheatsheet_screen.dart';
 import '../features/daily/daily_challenge_screen.dart';
+import '../features/generate/generate_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/bookmarks_screen.dart';
 import '../features/pdf/pdf_viewer_screen.dart';
@@ -104,6 +105,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/sync',
         builder: (context, state) => const SyncScreen(),
+      ),
+      GoRoute(
+        path: '/generate',
+        builder: (context, state) {
+          final extra = state.extra;
+          return GenerateScreen(
+            prefill: extra is GeneratePrefill ? extra : null,
+          );
+        },
       ),
       GoRoute(
         path: '/source/:sourceId',
