@@ -109,13 +109,13 @@ class StudySessionController
     _userRepo = ref.watch(userStateRepositoryProvider);
     final cards = await _repo.listFlashcardsForTopic(topicId);
     final questions = await _repo.listQuestionsForTopic(topicId);
+    final optionsMap = await _repo.listOptionsForQuestions(
+        questions.map((q) => q.id).toList());
     final items = <StudyItem>[
       for (final c in cards) FlashcardItem(c),
+      for (final q in questions)
+        QuestionItem(q, optionsMap[q.id] ?? const []),
     ];
-    for (final q in questions) {
-      final opts = await _repo.listOptionsForQuestion(q.id);
-      items.add(QuestionItem(q, opts));
-    }
     return StudySessionState.initial(items);
   }
 

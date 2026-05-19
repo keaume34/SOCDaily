@@ -90,40 +90,35 @@ class UserStateRepository {
     return rows.map((r) => r.readTable(_db.flashcards)).toList();
   }
 
-  /// Counts for the Home dashboard.
+  /// Counts for the Home dashboard. Runs all three count queries in parallel.
   Future<DueCounts> dueCounts({DateTime? asOf}) async {
     final t = asOf ?? DateTime.now();
-    final dueExp = _db.userCardState.flashcardId.isNull() |
-        _db.userCardState.nextReview.isSmallerOrEqualValue(t);
-    final dueQuery = _db.selectOnly(_db.flashcards).join([
-      leftOuterJoin(
-        _db.userCardState,
-        _db.userCardState.flashcardId.equalsExp(_db.flashcards.id),
-      ),
-    ])
-      ..addColumns([_db.flashcards.id.count()])
-      ..where(dueExp);
-    final dueRow = await dueQuery.getSingle();
-    final due = dueRow.read(_db.flashcards.id.count()) ?? 0;
+    final joinCondition = leftOuterJoin(
+      _db.userCardState,
+      _db.userCardState.flashcardId.equalsExp(_db.flashcards.id),
+    );
+    final countCol = _db.flashcards.id.count();
 
-    final newQuery = _db.selectOnly(_db.flashcards).join([
-      leftOuterJoin(
-        _db.userCardState,
-        _db.userCardState.flashcardId.equalsExp(_db.flashcards.id),
-      ),
-    ])
-      ..addColumns([_db.flashcards.id.count()])
-      ..where(_db.userCardState.flashcardId.isNull());
-    final newRow = await newQuery.getSingle();
-    final newCount = newRow.read(_db.flashcards.id.count()) ?? 0;
-
-    final total = await (_db.selectOnly(_db.flashcards)
-          ..addColumns([_db.flashcards.id.count()]))
+    final dueFuture = (_db.selectOnly(_db.flashcards).join([joinCondition])
+          ..addColumns([countCol])
+          ..where(_db.userCardState.flashcardId.isNull() |
+              _db.userCardState.nextReview.isSmallerOrEqualValue(t)))
         .getSingle();
+
+    final newFuture = (_db.selectOnly(_db.flashcards).join([joinCondition])
+          ..addColumns([countCol])
+          ..where(_db.userCardState.flashcardId.isNull()))
+        .getSingle();
+
+    final totalFuture = (_db.selectOnly(_db.flashcards)
+          ..addColumns([countCol]))
+        .getSingle();
+
+    final results = await Future.wait([dueFuture, newFuture, totalFuture]);
     return DueCounts(
-      due: due,
-      newCount: newCount,
-      total: total.read(_db.flashcards.id.count()) ?? 0,
+      due: results[0].read(countCol) ?? 0,
+      newCount: results[1].read(countCol) ?? 0,
+      total: results[2].read(countCol) ?? 0,
     );
   }
 
@@ -232,28 +227,30 @@ class UserStateRepository {
   }
 
   Future<TotalsSnapshot> totals() async {
-    final card = await (_db.selectOnly(_db.userCardState)
+    final cardFuture = (_db.selectOnly(_db.userCardState)
           ..addColumns([
             _db.userCardState.flashcardId.count(),
             _db.userCardState.reviewCount.sum(),
           ]))
         .getSingle();
-    final mcq = await (_db.selectOnly(_db.userQuestionState)
+    final mcqFuture = (_db.selectOnly(_db.userQuestionState)
           ..addColumns([
             _db.userQuestionState.attempts.sum(),
             _db.userQuestionState.correct.sum(),
           ]))
         .getSingle();
-    final attempts =
-        mcq.read(_db.userQuestionState.attempts.sum()) ?? 0;
-    final correct = mcq.read(_db.userQuestionState.correct.sum()) ?? 0;
+    final results = await Future.wait([cardFuture, mcqFuture]);
+    final card = results[0];
+    final mcq = results[1];
     return TotalsSnapshot(
       cardsKnown:
           card.read(_db.userCardState.flashcardId.count()) ?? 0,
       cardsReviewed:
           card.read(_db.userCardState.reviewCount.sum()) ?? 0,
-      mcqAttempts: attempts,
-      mcqCorrect: correct,
+      mcqAttempts:
+          mcq.read(_db.userQuestionState.attempts.sum()) ?? 0,
+      mcqCorrect:
+          mcq.read(_db.userQuestionState.correct.sum()) ?? 0,
     );
   }
 

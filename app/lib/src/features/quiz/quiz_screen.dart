@@ -142,12 +142,11 @@ class _QuizRunScreenState extends ConsumerState<QuizRunScreen> {
       _loadItems() async {
     final repo = ref.read(contentRepositoryProvider);
     final qs = await repo.randomQuestions(widget.count);
-    final out = <({Question q, List<QuestionOption> opts})>[];
-    for (final q in qs) {
-      final opts = await repo.listOptionsForQuestion(q.id);
-      out.add((q: q, opts: opts));
-    }
-    return out;
+    final optionsMap =
+        await repo.listOptionsForQuestions(qs.map((q) => q.id).toList());
+    return [
+      for (final q in qs) (q: q, opts: optionsMap[q.id] ?? const []),
+    ];
   }
 
   @override

@@ -343,22 +343,26 @@ class SeedImporter {
     await (_db.delete(_db.flashcards)
           ..where((t) => t.topicId.equals(topicId)))
         .go();
-    for (final f in flashcards) {
-      await _db.into(_db.flashcards).insert(
-            FlashcardsCompanion.insert(
-              topicId: topicId,
-              front: f['front'] as String,
-              back: f['back'] as String,
-              hint: Value(f['hint'] as String?),
-              difficulty: Value(
-                (f['difficulty'] as String?) ?? 'medium',
-              ),
-              tagsJson: Value(jsonEncode(f['tags'] ?? const [])),
-              sourceId: Value(sourceId),
-              sourcePage: Value(f['source_page'] as int?),
+    if (flashcards.isEmpty) return;
+    await _db.batch((batch) {
+      for (final f in flashcards) {
+        batch.insert(
+          _db.flashcards,
+          FlashcardsCompanion.insert(
+            topicId: topicId,
+            front: f['front'] as String,
+            back: f['back'] as String,
+            hint: Value(f['hint'] as String?),
+            difficulty: Value(
+              (f['difficulty'] as String?) ?? 'medium',
             ),
-          );
-    }
+            tagsJson: Value(jsonEncode(f['tags'] ?? const [])),
+            sourceId: Value(sourceId),
+            sourcePage: Value(f['source_page'] as int?),
+          ),
+        );
+      }
+    });
   }
 
   Future<void> _replaceQuestions({
@@ -366,17 +370,20 @@ class SeedImporter {
     required int? sourceId,
     required List<Map<String, dynamic>> questions,
   }) async {
+    // Batch-delete old options for all questions of this topic.
     final oldIds = await (_db.select(_db.questions)
           ..where((t) => t.topicId.equals(topicId)))
         .get();
-    for (final q in oldIds) {
+    if (oldIds.isNotEmpty) {
       await (_db.delete(_db.questionOptions)
-            ..where((t) => t.questionId.equals(q.id)))
+            ..where((t) => t.questionId.isIn(oldIds.map((q) => q.id).toList())))
           .go();
     }
     await (_db.delete(_db.questions)..where((t) => t.topicId.equals(topicId)))
         .go();
 
+    // Questions need individual inserts because we need the auto-generated ID
+    // for inserting options. But options per question can be batched.
     for (final q in questions) {
       final qid = await _db.into(_db.questions).insert(
             QuestionsCompanion.insert(
@@ -394,9 +401,12 @@ class SeedImporter {
           );
       final opts = (q['options'] as List?)?.cast<Map<String, dynamic>>() ??
           const [];
-      for (var i = 0; i < opts.length; i++) {
-        final o = opts[i];
-        await _db.into(_db.questionOptions).insert(
+      if (opts.isNotEmpty) {
+        await _db.batch((batch) {
+          for (var i = 0; i < opts.length; i++) {
+            final o = opts[i];
+            batch.insert(
+              _db.questionOptions,
               QuestionOptionsCompanion.insert(
                 questionId: qid,
                 label: o['label'] as String,
@@ -405,6 +415,8 @@ class SeedImporter {
                 orderIndex: Value(i),
               ),
             );
+          }
+        });
       }
     }
   }

@@ -68,6 +68,22 @@ class ContentRepository {
         .get();
   }
 
+  /// Batch-load options for multiple questions in a single query.
+  /// Returns a map of questionId → sorted options list.
+  Future<Map<int, List<QuestionOption>>> listOptionsForQuestions(
+      List<int> questionIds) async {
+    if (questionIds.isEmpty) return const {};
+    final rows = await (_db.select(_db.questionOptions)
+          ..where((o) => o.questionId.isIn(questionIds))
+          ..orderBy([(o) => OrderingTerm(expression: o.orderIndex)]))
+        .get();
+    final map = <int, List<QuestionOption>>{};
+    for (final o in rows) {
+      (map[o.questionId] ??= []).add(o);
+    }
+    return map;
+  }
+
   Future<List<Flashcard>> allFlashcards() {
     return (_db.select(_db.flashcards)
           ..orderBy([(f) => OrderingTerm(expression: f.id)]))
@@ -122,32 +138,54 @@ class ContentRepository {
 
   Future<List<({Topic topic, List<Flashcard> flashcards})>>
       cheatsheetForSubject(int subjectId) async {
-    final chapters = await listChapters(subjectId);
-    final rows = <({Topic topic, List<Flashcard> flashcards})>[];
-    for (final ch in chapters) {
-      final topics = await listTopics(ch.id);
-      for (final t in topics) {
-        final cards = await listFlashcardsForTopic(t.id);
-        if (cards.isNotEmpty) {
-          rows.add((topic: t, flashcards: cards));
-        }
-      }
+    // Single join query: chapters → topics → flashcards for this subject.
+    final chapterIds = await (_db.select(_db.chapters)
+          ..where((c) => c.subjectId.equals(subjectId)))
+        .get()
+        .then((list) => list.map((c) => c.id).toList());
+    if (chapterIds.isEmpty) return const [];
+
+    final topics = await (_db.select(_db.topics)
+          ..where((t) => t.chapterId.isIn(chapterIds))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.orderIndex),
+            (t) => OrderingTerm(expression: t.title),
+          ]))
+        .get();
+    if (topics.isEmpty) return const [];
+
+    final topicIds = topics.map((t) => t.id).toList();
+    final allCards = await (_db.select(_db.flashcards)
+          ..where((f) => f.topicId.isIn(topicIds))
+          ..orderBy([(f) => OrderingTerm(expression: f.id)]))
+        .get();
+
+    final cardsByTopic = <int, List<Flashcard>>{};
+    for (final c in allCards) {
+      (cardsByTopic[c.topicId] ??= []).add(c);
     }
-    return rows;
+
+    return [
+      for (final t in topics)
+        if (cardsByTopic.containsKey(t.id))
+          (topic: t, flashcards: cardsByTopic[t.id]!),
+    ];
   }
 
   Future<ContentCounts> globalCounts() async {
-    final s = await _db.subjects.count().getSingle();
-    final c = await _db.chapters.count().getSingle();
-    final t = await _db.topics.count().getSingle();
-    final f = await _db.flashcards.count().getSingle();
-    final q = await _db.questions.count().getSingle();
+    final results = await Future.wait([
+      _db.subjects.count().getSingle(),
+      _db.chapters.count().getSingle(),
+      _db.topics.count().getSingle(),
+      _db.flashcards.count().getSingle(),
+      _db.questions.count().getSingle(),
+    ]);
     return ContentCounts(
-      subjects: s,
-      chapters: c,
-      topics: t,
-      flashcards: f,
-      questions: q,
+      subjects: results[0],
+      chapters: results[1],
+      topics: results[2],
+      flashcards: results[3],
+      questions: results[4],
     );
   }
 }

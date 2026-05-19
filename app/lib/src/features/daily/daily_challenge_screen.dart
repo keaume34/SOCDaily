@@ -20,14 +20,13 @@ final _dailyItemsProvider =
     FutureProvider.autoDispose<List<StudyItem>>((ref) async {
   final repo = ref.watch(contentRepositoryProvider);
   final picked = await repo.dailyChallenge();
-  final items = <StudyItem>[
+  final optionsMap = await repo.listOptionsForQuestions(
+      picked.questions.map((q) => q.id).toList());
+  return <StudyItem>[
     for (final c in picked.flashcards) FlashcardItem(c),
+    for (final q in picked.questions)
+      QuestionItem(q, optionsMap[q.id] ?? const []),
   ];
-  for (final q in picked.questions) {
-    final opts = await repo.listOptionsForQuestion(q.id);
-    items.add(QuestionItem(q, opts));
-  }
-  return items;
 });
 
 class DailyChallengeScreen extends ConsumerStatefulWidget {
