@@ -353,7 +353,7 @@ class _FeatureGrid extends StatelessWidget {
         crossAxisCount: 2,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: 2.8,
+        childAspectRatio: 3.8,
         children: items,
       );
     }
@@ -469,7 +469,7 @@ class _FeatureCard extends StatelessWidget {
                 onTap: onTap,
                 borderRadius: BorderRadius.circular(20),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   child: Row(
                     children: [
                       Container(
