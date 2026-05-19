@@ -1,8 +1,6 @@
 // Home screen: Mastercard-inspired dashboard with hero greeting, stat chips,
 // feature grid, and weak-areas section.
 
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -265,61 +263,92 @@ class _MiniStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: isDark
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF2A4A3A), Color(0xFF1A2A2A), Color(0xFF1A1F2A)],
+              )
+            : null,
+        boxShadow: isDark
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF00C896).withValues(alpha: 0.08),
+                  blurRadius: 24,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(1.2),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: isDark
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF00C896),
+                    Color(0xFF006644),
+                    Color(0xFF003322),
+                  ],
+                )
+              : null,
+        ),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.white.withValues(alpha: 0.07)
-                : Colors.white.withValues(alpha: 0.75),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.06),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
-                blurRadius: 32,
-                offset: const Offset(0, 8),
-              ),
-            ],
+                ? const Color(0xFF0D1117)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(19),
+            border: isDark
+                ? null
+                : Border.all(color: Colors.black.withValues(alpha: 0.06)),
+            boxShadow: isDark
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 24,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.black.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 18,
-                  color: isDark ? Colors.white.withValues(alpha: 0.7) : MCColors.slateGray),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    label,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : MCColors.slateGray,
+                      letterSpacing: 0.56,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
+                    ),
+                  ),
+                  Icon(icon, size: 18,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.35)
+                        : MCColors.slateGray.withValues(alpha: 0.5)),
+                ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
                 value,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
+                  fontSize: 28,
                   color: isDark ? Colors.white : MCColors.inkBlack,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: isDark ? Colors.white.withValues(alpha: 0.45) : MCColors.slateGray,
-                  letterSpacing: 0.56,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 10,
                 ),
               ),
             ],
@@ -438,92 +467,117 @@ class _FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return TapBounce(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.07)
-                  : Colors.white.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.05),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
-                  blurRadius: 24,
-                  offset: const Offset(0, 6),
+    final cardContent = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(19),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : MCColors.charcoal,
+                  shape: BoxShape.circle,
                 ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap,
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.12)
-                              : MCColors.charcoal,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(icon,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.9)
-                              : Colors.white,
-                          size: 22),
+                child: Icon(icon,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.9)
+                      : Colors.white,
+                  size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: isDark ? Colors.white : MCColors.inkBlack,
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              title,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                                color: isDark ? Colors.white : MCColors.inkBlack,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              subtitle,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.45)
-                                    : MCColors.slateGray,
-                                fontSize: 12,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.4)
+                            : MCColors.slateGray,
+                        fontSize: 11.5,
                       ),
-                    ],
-                  ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
-            ),
+            ],
           ),
         ),
+      ),
+    );
+
+    if (isDark) {
+      return TapBounce(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(1.2),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF00C896),
+                Color(0xFF006644),
+                Color(0xFF003322),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF00C896).withValues(alpha: 0.06),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D1117),
+              borderRadius: BorderRadius.circular(19),
+            ),
+            child: cardContent,
+          ),
+        ),
+      );
+    }
+
+    return TapBounce(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: cardContent,
       ),
     );
   }
