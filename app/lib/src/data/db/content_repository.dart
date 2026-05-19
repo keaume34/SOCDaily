@@ -211,20 +211,24 @@ final contentRepositoryProvider = Provider<ContentRepository>((ref) {
 });
 
 final subjectsProvider = FutureProvider<List<Subject>>((ref) {
+  ref.keepAlive();
   return ref.watch(contentRepositoryProvider).listSubjects();
 });
 
 final chaptersProvider =
     FutureProvider.family<List<Chapter>, int>((ref, subjectId) {
+  ref.keepAlive();
   return ref.watch(contentRepositoryProvider).listChapters(subjectId);
 });
 
 final topicsProvider =
     FutureProvider.family<List<Topic>, int>((ref, chapterId) {
+  ref.keepAlive();
   return ref.watch(contentRepositoryProvider).listTopics(chapterId);
 });
 
 final contentCountsProvider = FutureProvider<ContentCounts>((ref) {
+  ref.keepAlive();
   return ref.watch(contentRepositoryProvider).globalCounts();
 });
 

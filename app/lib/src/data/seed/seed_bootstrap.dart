@@ -10,17 +10,23 @@ import '../../features/settings/settings_controller.dart';
 const _kSeedImportedKey = 'seed.imported_version';
 
 final seedBootstrapProvider = FutureProvider<SeedBootstrapResult>((ref) async {
+  ref.keepAlive();
   final prefs = ref.watch(sharedPreferencesProvider);
   final db = ref.watch(appDatabaseProvider);
   final lastImported = prefs.getInt(_kSeedImportedKey);
 
-  // Always run; the importer itself is idempotent. We also use the recorded
-  // version so a future content shape bump can trigger a clean re-import.
+  // Skip the full import if the bundled version hasn't changed.
+  if (lastImported == SeedImporter.bundledVersion) {
+    return SeedBootstrapResult(
+      importedVersion: SeedImporter.bundledVersion,
+      flashcards: 0,
+      questions: 0,
+    );
+  }
+
   final importer = SeedImporter(db);
   final result = await importer.ensureImported();
-  if (lastImported != result.bundledVersion) {
-    await prefs.setInt(_kSeedImportedKey, result.bundledVersion);
-  }
+  await prefs.setInt(_kSeedImportedKey, result.bundledVersion);
   return SeedBootstrapResult(
     importedVersion: result.bundledVersion,
     flashcards: result.flashcardsAdded,

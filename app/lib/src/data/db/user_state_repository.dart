@@ -163,20 +163,22 @@ class UserStateRepository {
   Future<({int current, int longest, int? milestoneHit})> streakStats(
       {DateTime? now}) async {
     final today = _dayBucket(now ?? DateTime.now());
+    // Only fetch rows with actual activity, sorted by day.
     final rows = await (_db.select(_db.userStreak)
+          ..where((s) =>
+              s.cardsReviewed.isBiggerThanValue(0) |
+              s.questionsAnswered.isBiggerThanValue(0))
           ..orderBy([(s) => OrderingTerm.asc(s.day)]))
         .get();
     if (rows.isEmpty) {
       return (current: 0, longest: 0, milestoneHit: null);
     }
-    final days = rows
-        .where((r) => r.cardsReviewed > 0 || r.questionsAnswered > 0)
-        .map((r) => _dayBucket(r.day))
-        .toSet();
+    // Days are already sorted and filtered — build set for O(1) lookups.
+    final sorted = rows.map((r) => _dayBucket(r.day)).toList();
+    final days = sorted.toSet();
     int longest = 0;
     int run = 0;
     DateTime? prev;
-    final sorted = days.toList()..sort();
     for (final d in sorted) {
       if (prev != null && d.difference(prev).inDays == 1) {
         run += 1;
@@ -186,8 +188,6 @@ class UserStateRepository {
       if (run > longest) longest = run;
       prev = d;
     }
-    // Current streak: count back from today (or yesterday — keeps streak
-    // alive until midnight if user studied today).
     int current = 0;
     var cursor = today;
     while (days.contains(cursor)) {
@@ -217,13 +217,11 @@ class UserStateRepository {
       for (final r in rows)
         _dayBucket(r.day): r.cardsReviewed + r.questionsAnswered,
     };
-    return [
-      for (var i = 0; i < days; i++)
-        HeatmapDay(
-          day: earliest.add(Duration(days: i)),
-          count: byDay[earliest.add(Duration(days: i))] ?? 0,
-        ),
-    ];
+    final result = List<HeatmapDay>.generate(days, (i) {
+      final d = earliest.add(Duration(days: i));
+      return HeatmapDay(day: d, count: byDay[d] ?? 0);
+    });
+    return result;
   }
 
   Future<TotalsSnapshot> totals() async {
@@ -436,7 +434,12 @@ final searchProvider = FutureProvider.autoDispose
     return const SearchResults(flashcards: [], questions: []);
   }
   final repo = ref.watch(userStateRepositoryProvider);
-  final flashcards = await repo.searchFlashcards(trimmed);
-  final questions = await repo.searchQuestions(trimmed);
-  return SearchResults(flashcards: flashcards, questions: questions);
+  final results = await Future.wait([
+    repo.searchFlashcards(trimmed),
+    repo.searchQuestions(trimmed),
+  ]);
+  return SearchResults(
+    flashcards: results[0] as List<Flashcard>,
+    questions: results[1] as List<Question>,
+  );
 });

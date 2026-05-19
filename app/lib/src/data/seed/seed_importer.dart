@@ -18,7 +18,7 @@ class SeedImporter {
 
   /// Bumped whenever the bundled JSON shape changes so the importer can run
   /// a full re-import path.
-  static const int _bundledVersion = 1;
+  static const int bundledVersion = 1;
 
   /// Run on every cold start. Cheap when nothing changed (~one SELECT).
   Future<SeedImportResult> ensureImported() async {
@@ -115,7 +115,7 @@ class SeedImporter {
         // Replace flashcards + questions for this topic if the bundle changed.
         // Safe because user state lives in separate tables keyed by item id;
         // a topic re-import won't wipe SM-2 schedule because we delete only
-        // when the bundle is materially different (versioned via [_bundledVersion]).
+        // when the bundle is materially different (versioned via [bundledVersion]).
         await _replaceFlashcards(
           topicId: topicResult.$1,
           sourceId: sourceId,
@@ -137,7 +137,7 @@ class SeedImporter {
     });
 
     return SeedImportResult(
-      bundledVersion: _bundledVersion,
+      bundledVersion: bundledVersion,
       subjectsAdded: subjectsAdded,
       chaptersAdded: chaptersAdded,
       topicsAdded: topicsAdded,

@@ -203,6 +203,18 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'socdaily.sqlite'));
-    return NativeDatabase.createInBackground(file);
+    return NativeDatabase.createInBackground(
+      file,
+      setup: (db) {
+        // WAL mode: improves concurrent read/write performance.
+        db.execute('PRAGMA journal_mode=WAL');
+        // Synchronous NORMAL: safe with WAL, faster than FULL.
+        db.execute('PRAGMA synchronous=NORMAL');
+        // Increase cache size to 10 MB for better read performance.
+        db.execute('PRAGMA cache_size=-10000');
+        // Enable foreign keys.
+        db.execute('PRAGMA foreign_keys=ON');
+      },
+    );
   });
 }
