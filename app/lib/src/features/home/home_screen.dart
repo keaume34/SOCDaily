@@ -368,7 +368,7 @@ class _FeatureGrid extends StatelessWidget {
   List<Widget> _featureItems(BuildContext context, AppLocalizations l10n) {
     return [
       _FeatureCard(
-        icon: Icons.school_rounded,
+        icon: Icons.style_rounded,
         title: l10n.homeStartSession,
         subtitle: l10n.homeStartSessionSubtitle,
         isDark: isDark,
@@ -382,35 +382,35 @@ class _FeatureGrid extends StatelessWidget {
         onTap: () => context.push('/daily'),
       ),
       _FeatureCard(
-        icon: Icons.timer_rounded,
+        icon: Icons.quiz_rounded,
         title: 'Mock exam',
-        subtitle: 'Timed random MCQs \u2014 practice under pressure.',
+        subtitle: 'Timed random MCQs — test under pressure.',
         isDark: isDark,
         onTap: () => context.push('/quiz'),
       ),
       _FeatureCard(
-        icon: Icons.table_chart_rounded,
+        icon: Icons.grid_view_rounded,
         title: 'Cheatsheet',
-        subtitle: 'Table view of all flashcards by subject.',
+        subtitle: 'Quick-reference table by subject.',
         isDark: isDark,
         onTap: () => context.push('/cheatsheet'),
       ),
       _FeatureCard(
-        icon: Icons.av_timer_rounded,
+        icon: Icons.timer_rounded,
         title: 'Pomodoro',
-        subtitle: 'Focus / break cycles while you study.',
+        subtitle: 'Focus / break study cycles.',
         isDark: isDark,
         onTap: () => context.push('/pomodoro'),
       ),
       _FeatureCard(
-        icon: Icons.workspace_premium_rounded,
+        icon: Icons.verified_rounded,
         title: 'Certificate',
-        subtitle: 'Generate a printable study certificate.',
+        subtitle: 'Generate a study certificate.',
         isDark: isDark,
         onTap: () => context.push('/certificate'),
       ),
       _FeatureCard(
-        icon: Icons.menu_book_rounded,
+        icon: Icons.library_books_rounded,
         title: l10n.homeBrowse,
         subtitle: l10n.homeBrowseSubtitle,
         isDark: isDark,
@@ -441,25 +441,25 @@ class _FeatureCard extends StatelessWidget {
     return TapBounce(
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
             decoration: BoxDecoration(
               color: isDark
                   ? Colors.white.withValues(alpha: 0.07)
-                  : Colors.white.withValues(alpha: 0.75),
-              borderRadius: BorderRadius.circular(24),
+                  : Colors.white.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.06),
+                    : Colors.black.withValues(alpha: 0.05),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
-                  blurRadius: 32,
-                  offset: const Offset(0, 8),
+                  color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
+                  blurRadius: 24,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
@@ -467,28 +467,28 @@ class _FeatureCard extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: onTap,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                   child: Row(
                     children: [
                       Container(
-                        width: 56,
-                        height: 56,
+                        width: 48,
+                        height: 48,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: isDark
-                              ? Colors.white.withValues(alpha: 0.1)
-                              : Colors.black.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(16),
+                              ? Colors.white.withValues(alpha: 0.12)
+                              : MCColors.charcoal,
+                          shape: BoxShape.circle,
                         ),
                         child: Icon(icon,
                           color: isDark
-                              ? Colors.white.withValues(alpha: 0.8)
-                              : MCColors.inkBlack,
-                          size: 28),
+                              ? Colors.white.withValues(alpha: 0.9)
+                              : Colors.white,
+                          size: 22),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -502,36 +502,19 @@ class _FeatureCard extends StatelessWidget {
                                 color: isDark ? Colors.white : MCColors.inkBlack,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 2),
                             Text(
                               subtitle,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: isDark
-                                    ? Colors.white.withValues(alpha: 0.5)
+                                    ? Colors.white.withValues(alpha: 0.45)
                                     : MCColors.slateGray,
+                                fontSize: 12,
                               ),
-                              maxLines: 2,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : Colors.black.withValues(alpha: 0.04),
-                        ),
-                        child: Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.5)
-                              : MCColors.slateGray,
                         ),
                       ),
                     ],
