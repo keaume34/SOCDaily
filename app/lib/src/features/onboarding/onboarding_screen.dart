@@ -32,7 +32,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finish() async {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setBool(_kOnboardingCompleteKey, true);
-    ref.invalidate(onboardingCompleteProvider);
     if (mounted) context.go('/home');
   }
 

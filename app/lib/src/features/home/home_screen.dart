@@ -119,13 +119,17 @@ class _HeroSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: isDark
-            ? MCColors.inkBlack
-            : MCColors.inkBlack,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [const Color(0xFF2A2A28), const Color(0xFF1A1917)]
+              : [MCColors.inkBlack, const Color(0xFF2A2A28)],
+        ),
         borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.12),
             blurRadius: 48,
             offset: const Offset(0, 24),
           ),
@@ -268,34 +272,49 @@ class _MiniStatCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withOpacity(0.05)
-            : MCColors.liftedCream,
+            ? Colors.white.withValues(alpha: 0.07)
+            : Colors.white,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : color.withValues(alpha: 0.12),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.2)
+                : color.withValues(alpha: 0.08),
             blurRadius: 24,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(height: 10),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: isDark ? 0.15 : 0.10),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: isDark ? MCColors.liftedCream : MCColors.inkBlack,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : MCColors.inkBlack,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: MCColors.slateGray,
+              color: isDark ? Colors.white.withValues(alpha: 0.5) : MCColors.slateGray,
               letterSpacing: 0.56,
               fontWeight: FontWeight.w700,
               fontSize: 10,
@@ -428,15 +447,32 @@ class _FeatureCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withOpacity(0.05)
-              : MCColors.liftedCream,
           borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    accentColor.withValues(alpha: 0.15),
+                    accentColor.withValues(alpha: 0.05),
+                  ]
+                : [
+                    Colors.white,
+                    accentColor.withValues(alpha: 0.04),
+                  ],
+          ),
+          border: Border.all(
+            color: isDark
+                ? accentColor.withValues(alpha: 0.2)
+                : accentColor.withValues(alpha: 0.12),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.2)
+                  : accentColor.withValues(alpha: 0.08),
               blurRadius: 24,
-              offset: const Offset(0, 4),
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -446,18 +482,18 @@ class _FeatureCard extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(24),
             child: Padding(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 52,
+                    height: 52,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: accentColor.withOpacity(isDark ? 0.15 : 0.08),
+                      color: accentColor.withValues(alpha: isDark ? 0.2 : 0.10),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(icon, color: accentColor, size: 22),
+                    child: Icon(icon, color: accentColor, size: 26),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -468,16 +504,20 @@ class _FeatureCard extends StatelessWidget {
                         Text(
                           title,
                           style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: isDark ? Colors.white : MCColors.inkBlack,
                           ),
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 4),
                         Text(
                           subtitle,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: MCColors.slateGray,
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.55)
+                                : MCColors.slateGray,
                           ),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -485,20 +525,16 @@ class _FeatureCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    width: 32,
-                    height: 32,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isDark
-                          ? Colors.white.withOpacity(0.06)
-                          : MCColors.canvasCream,
+                      color: accentColor.withValues(alpha: isDark ? 0.15 : 0.08),
                     ),
                     child: Icon(
                       Icons.arrow_forward_rounded,
-                      size: 16,
-                      color: isDark
-                          ? Colors.white.withOpacity(0.4)
-                          : MCColors.inkBlack,
+                      size: 18,
+                      color: accentColor,
                     ),
                   ),
                 ],
