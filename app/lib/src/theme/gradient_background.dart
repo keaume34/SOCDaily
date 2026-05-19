@@ -1,11 +1,12 @@
-// Reusable gradient surface backgrounds for the "Soft Styles" design system.
+// Reusable surface backgrounds for the Mastercard-inspired design system.
 //
-// Warm, creamy gradients with gentle accent washes. No harsh edges —
-// everything feels soft and inviting.
+// Warm cream canvas (#F3F0EE), never sterile white. Surfaces use
+// canvas cream → lifted cream → ink footer hierarchy.
 
 import 'package:flutter/material.dart';
 
 import 'app_accent.dart';
+import 'app_theme.dart';
 
 class GradientBackground extends StatelessWidget {
   const GradientBackground({
@@ -24,59 +25,17 @@ class GradientBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final base = Theme.of(context).colorScheme.surface;
-
-    final accentWash = Color.alphaBlend(
-      accent.soft.withOpacity(isDark ? intensity * 0.5 : intensity),
-      base,
-    );
-    final warmCorner = isDark
-        ? Color.alphaBlend(
-            const Color(0xFF1E1530).withOpacity(0.3), base)
-        : Color.alphaBlend(
-            const Color(0xFFFFF5EE).withOpacity(0.4), base);
 
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [accentWash, base, warmCorner],
-          stops: const [0.0, 0.55, 1.0],
-        ),
-      ),
-      child: showOrbGlow
-          ? CustomPaint(
-              painter: _SoftGlowPainter(
-                color: accent.soft.withOpacity(isDark ? 0.04 : 0.06),
-              ),
-              child: child,
-            )
-          : child,
+      color: isDark
+          ? const Color(0xFF1A1917)
+          : MCColors.canvasCream,
+      child: child,
     );
   }
 }
 
-class _SoftGlowPainter extends CustomPainter {
-  _SoftGlowPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(0.6, -0.6),
-        radius: 1.0,
-        colors: [color, color.withOpacity(0)],
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, paint);
-  }
-
-  @override
-  bool shouldRepaint(_SoftGlowPainter old) => old.color != color;
-}
-
-/// Soft accent badge / chip.
+/// Accent chip — pill-shaped with eyebrow dot.
 class AccentChip extends StatelessWidget {
   const AccentChip({
     required this.label,
@@ -97,8 +56,8 @@ class AccentChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark
             ? accent.soft.withOpacity(0.12)
-            : accent.soft.withOpacity(0.45),
-        borderRadius: BorderRadius.circular(50),
+            : accent.soft.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -110,12 +69,13 @@ class AccentChip extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'PlusJakartaSans',
+              fontFamily: 'SofiaSans',
               fontWeight: FontWeight.w600,
               color: isDark
                   ? Colors.white.withOpacity(0.85)
                   : accent.deep,
               fontSize: 13,
+              letterSpacing: -0.13,
             ),
           ),
         ],
@@ -124,7 +84,7 @@ class AccentChip extends StatelessWidget {
   }
 }
 
-/// Soft elevated card — uses subtle shadow instead of borders.
+/// Mastercard-style elevated card — atmospheric shadow, warm surface.
 class GlassCard extends StatelessWidget {
   const GlassCard({
     required this.child,
@@ -145,15 +105,13 @@ class GlassCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark
             ? Colors.white.withOpacity(0.05)
-            : Colors.white,
+            : MCColors.liftedCream,
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.2)
-                : const Color(0xFFD4C9BE).withOpacity(0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(isDark ? 0.15 : 0.08),
+            blurRadius: 48,
+            offset: const Offset(0, 24),
           ),
         ],
       ),

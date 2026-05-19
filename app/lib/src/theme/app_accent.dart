@@ -1,12 +1,19 @@
-// Accent palette for the SOCDaily gradient theme system.
+// Accent palette for SOCDaily — Mastercard-inspired design system.
 //
-// The user wanted a monochrome (black ↔ white) gradient look as the default
-// but with selectable accents that blend with white or black to produce a
-// professional but distinct vibe. This enum captures the supported choices.
+// The default accent is Ink (warm near-black) which matches Mastercard's
+// primary CTA color. Additional accents are provided for personalisation
+// but all share the warm editorial tone of the Mastercard palette.
 
 import 'package:flutter/material.dart';
 
 enum AppAccent {
+  // ── Default: Mastercard Ink ──
+  ink('Ink', Color(0xFF141413), Color(0xFFEDE9E3)),
+
+  // ── Warm accents inspired by Mastercard palette ──
+  signal('Signal', Color(0xFFCF4500), Color(0xFFFDE8DD)),
+  clay('Clay', Color(0xFF9A3A0A), Color(0xFFF5E6DD)),
+
   // ── Professional ──
   graphite('Graphite', Color(0xFF1F2933), Color(0xFFE4E7EB)),
   azure('Azure', Color(0xFF1D4ED8), Color(0xFFDBEAFE)),
@@ -22,23 +29,18 @@ enum AppAccent {
 
   const AppAccent(this.label, this.deep, this.soft);
 
-  /// Human-readable label (English; the picker translates via [AppLocalizations]).
   final String label;
 
-  /// Strong end of the accent gradient — pairs with white on light surfaces
-  /// and with off-black on dark surfaces.
+  /// Strong end — pairs with cream text on buttons and surfaces.
   final Color deep;
 
-  /// Soft end of the accent gradient — kept very close to white/grey so
-  /// surfaces still feel professional rather than playful.
+  /// Soft end — warm background washes, active indicators, chips.
   final Color soft;
 
-  /// Convenience: gradient appropriate for a button or focus ring on the
-  /// given [brightness].
   LinearGradient accentGradient(Brightness brightness) {
     final pairedEnd = brightness == Brightness.dark
-        ? const Color(0xFF1A1A2E)
-        : const Color(0xFFFAF8F5);
+        ? const Color(0xFF1A1917)
+        : const Color(0xFFF3F0EE);
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -46,17 +48,20 @@ enum AppAccent {
     );
   }
 
-  /// Professional accents (the original 6).
+  /// Mastercard-inspired warm accents (the first 3).
+  static const mastercard = [ink, signal, clay];
+
+  /// Professional accents.
   static const professional = [graphite, azure, violet, crimson, forest, amber];
 
-  /// Friendly / pastel accents (the 3 new additions).
+  /// Friendly / pastel accents.
   static const friendly = [sakura, mint, mocha];
 
   static AppAccent fromName(String? name) {
-    if (name == null) return AppAccent.graphite;
+    if (name == null) return AppAccent.ink;
     return AppAccent.values.firstWhere(
       (a) => a.name == name,
-      orElse: () => AppAccent.graphite,
+      orElse: () => AppAccent.ink,
     );
   }
 }

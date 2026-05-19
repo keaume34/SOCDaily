@@ -1,5 +1,5 @@
-// Home screen: dashboard with hero greeting, stat chips, feature grid,
-// and weak-areas section. "Soft Styles" — rounded, warm, shadow-based.
+// Home screen: Mastercard-inspired dashboard with hero greeting, stat chips,
+// feature grid, and weak-areas section.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +11,7 @@ import '../../data/seed/seed_bootstrap.dart';
 import '../../widgets/tap_bounce.dart';
 import '../../l10n/app_localizations.dart';
 import '../../mascot/mascot_widget.dart';
+import '../../theme/app_theme.dart';
 import '../../theme/gradient_background.dart';
 import '../generate/generate_screen.dart';
 import '../settings/settings_controller.dart';
@@ -35,7 +36,7 @@ class HomeScreen extends ConsumerWidget {
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // ── Hero greeting ──
+            // ── Hero greeting (stadium frame) ──
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -53,7 +54,7 @@ class HomeScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
-                  isWide ? 32 : 20, 16, isWide ? 32 : 20, 0),
+                  isWide ? 32 : 20, 20, isWide ? 32 : 20, 0),
                 child: seed.when(
                   loading: () => const SizedBox(height: 4),
                   error: (e, st) => Text('Seed import failed: $e'),
@@ -76,7 +77,7 @@ class HomeScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
-                  isWide ? 32 : 20, 20, isWide ? 32 : 20, 0),
+                  isWide ? 32 : 20, 24, isWide ? 32 : 20, 0),
                 child: const _WeakTopicsSection(),
               ),
             ),
@@ -84,7 +85,7 @@ class HomeScreen extends ConsumerWidget {
             // ── Feature grid ──
             SliverPadding(
               padding: EdgeInsets.fromLTRB(
-                isWide ? 32 : 20, 20, isWide ? 32 : 20, 32),
+                isWide ? 32 : 20, 24, isWide ? 32 : 20, 32),
               sliver: _FeatureGrid(
                 isWide: isWide,
                 accent: accent,
@@ -99,7 +100,7 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// ── Hero section with greeting + mascot ──
+// ── Hero section: stadium-shaped card with 40px radius ──
 class _HeroSection extends StatelessWidget {
   const _HeroSection({
     required this.accent,
@@ -116,29 +117,17 @@ class _HeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  accent.deep.withOpacity(0.15),
-                  accent.deep.withOpacity(0.05),
-                ]
-              : [
-                  accent.soft.withOpacity(0.5),
-                  accent.soft.withOpacity(0.15),
-                ],
-        ),
-        borderRadius: BorderRadius.circular(28),
+        color: isDark
+            ? MCColors.inkBlack
+            : MCColors.inkBlack,
+        borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? accent.deep.withOpacity(0.15)
-                : accent.soft.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 48,
+            offset: const Offset(0, 24),
           ),
         ],
       ),
@@ -149,16 +138,33 @@ class _HeroSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.homeGreeting,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                // Eyebrow label
+                Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: MCColors.lightSignalOrange,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.homeGreeting.toUpperCase(),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: MCColors.slateGray,
+                        fontSize: 12,
+                        letterSpacing: 0.48,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 12),
                 Text(
                   l10n.appName,
                   style: theme.textTheme.displayMedium?.copyWith(
+                    color: MCColors.canvasCream,
                     fontSize: 32,
                   ),
                 ),
@@ -166,21 +172,29 @@ class _HeroSection extends StatelessWidget {
                 Text(
                   'Your SOC learning companion',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: MCColors.dustTaupe,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 16),
-          const MascotWidget(mood: OttoMood.neutral, size: 72),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.08),
+            ),
+            child: const MascotWidget(mood: OttoMood.neutral, size: 56),
+          ),
         ],
       ),
     );
   }
 }
 
-// ── Stats row with animated chips ──
+// ── Stats row with Mastercard-style cards ──
 class _StatsRow extends StatelessWidget {
   const _StatsRow({
     required this.accent,
@@ -201,29 +215,29 @@ class _StatsRow extends StatelessWidget {
         Expanded(
           child: _MiniStatCard(
             icon: Icons.local_fire_department_rounded,
-            label: 'Streak',
+            label: 'STREAK',
             value: '0',
-            color: const Color(0xFFEF4444),
+            color: MCColors.signalOrange,
             isDark: isDark,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
           child: _MiniStatCard(
             icon: Icons.timelapse_rounded,
-            label: 'Due today',
+            label: 'DUE TODAY',
             value: '$dueCount',
-            color: accent.deep,
+            color: accent.deep as Color,
             isDark: isDark,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
           child: _MiniStatCard(
             icon: Icons.auto_awesome_rounded,
-            label: 'New',
+            label: 'NEW',
             value: '$newCount',
-            color: const Color(0xFF8B5CF6),
+            color: MCColors.linkBlue,
             isDark: isDark,
           ),
         ),
@@ -251,19 +265,17 @@ class _MiniStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark
-            ? color.withOpacity(0.08)
-            : color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
+            ? Colors.white.withOpacity(0.05)
+            : MCColors.liftedCream,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.15)
-                : color.withOpacity(0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -271,19 +283,22 @@ class _MiniStatCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20, color: color),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             value,
             style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: color,
+              fontWeight: FontWeight.w600,
+              color: isDark ? MCColors.liftedCream : MCColors.inkBlack,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: MCColors.slateGray,
+              letterSpacing: 0.56,
+              fontWeight: FontWeight.w700,
+              fontSize: 10,
             ),
           ),
         ],
@@ -333,7 +348,7 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.school_rounded,
         title: l10n.homeStartSession,
         subtitle: l10n.homeStartSessionSubtitle,
-        accentColor: const Color(0xFF3B82F6),
+        accentColor: MCColors.inkBlack,
         isDark: isDark,
         onTap: () => context.push('/study/today'),
       ),
@@ -341,7 +356,7 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.bolt_rounded,
         title: l10n.homeDailyChallenge,
         subtitle: l10n.homeDailyChallengeSubtitle,
-        accentColor: const Color(0xFFF59E0B),
+        accentColor: MCColors.signalOrange,
         isDark: isDark,
         onTap: () => context.push('/daily'),
       ),
@@ -349,7 +364,7 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.timer_rounded,
         title: 'Mock exam',
         subtitle: 'Timed random MCQs — practice under pressure.',
-        accentColor: const Color(0xFFEF4444),
+        accentColor: MCColors.lightSignalOrange,
         isDark: isDark,
         onTap: () => context.push('/quiz'),
       ),
@@ -357,7 +372,7 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.table_chart_rounded,
         title: 'Cheatsheet',
         subtitle: 'Table view of all flashcards by subject.',
-        accentColor: const Color(0xFF10B981),
+        accentColor: const Color(0xFF047857),
         isDark: isDark,
         onTap: () => context.push('/cheatsheet'),
       ),
@@ -365,7 +380,7 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.av_timer_rounded,
         title: 'Pomodoro',
         subtitle: 'Focus / break cycles while you study.',
-        accentColor: const Color(0xFF8B5CF6),
+        accentColor: MCColors.linkBlue,
         isDark: isDark,
         onTap: () => context.push('/pomodoro'),
       ),
@@ -373,7 +388,7 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.workspace_premium_rounded,
         title: 'Certificate',
         subtitle: 'Generate a printable study certificate.',
-        accentColor: const Color(0xFF06B6D4),
+        accentColor: MCColors.charcoal,
         isDark: isDark,
         onTap: () => context.push('/certificate'),
       ),
@@ -381,7 +396,7 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.menu_book_rounded,
         title: l10n.homeBrowse,
         subtitle: l10n.homeBrowseSubtitle,
-        accentColor: const Color(0xFFEC4899),
+        accentColor: MCColors.inkBlack,
         isDark: isDark,
         onTap: () => context.go('/browse'),
       ),
@@ -414,16 +429,14 @@ class _FeatureCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.06)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(22),
+              ? Colors.white.withOpacity(0.05)
+              : MCColors.liftedCream,
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: isDark
-                  ? Colors.black.withOpacity(0.15)
-                  : const Color(0xFFD4C9BE).withOpacity(0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -431,22 +444,22 @@ class _FeatureCard extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(24),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
               child: Row(
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 48,
+                    height: 48,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: accentColor.withOpacity(isDark ? 0.15 : 0.1),
-                      borderRadius: BorderRadius.circular(13),
+                      color: accentColor.withOpacity(isDark ? 0.15 : 0.08),
+                      shape: BoxShape.circle,
                     ),
                     child: Icon(icon, color: accentColor, size: 22),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,11 +471,11 @@ class _FeatureCard extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 3),
                         Text(
                           subtitle,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                            color: MCColors.slateGray,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -471,10 +484,22 @@ class _FeatureCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.06)
+                          : MCColors.canvasCream,
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 16,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.4)
+                          : MCColors.inkBlack,
+                    ),
                   ),
                 ],
               ),
@@ -504,43 +529,42 @@ class _WeakTopicsSection extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Section eyebrow
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withOpacity(
-                          isDark ? 0.15 : 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.trending_down_rounded,
-                      size: 16,
-                      color: Color(0xFFF59E0B),
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: MCColors.lightSignalOrange,
+                      shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Weak areas',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                    'WEAK AREAS',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: MCColors.slateGray,
+                      fontSize: 12,
+                      letterSpacing: 0.48,
                     ),
                   ),
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                        horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(8),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.06)
+                          : MCColors.liftedCream,
+                      borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
                       'Top ${rows.length}',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: MCColors.slateGray,
                       ),
                     ),
                   ),
@@ -549,7 +573,7 @@ class _WeakTopicsSection extends ConsumerWidget {
             ),
             for (final row in rows)
               Padding(
-                padding: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: TapBounce(
                   onTap: () {
                     context.push(
@@ -562,42 +586,42 @@ class _WeakTopicsSection extends ConsumerWidget {
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
+                        horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
                       color: isDark
                           ? Colors.white.withOpacity(0.05)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(18),
+                          : MCColors.liftedCream,
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: isDark
-                              ? Colors.black.withOpacity(0.12)
-                              : const Color(0xFFD4C9BE).withOpacity(0.15),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withOpacity(
+                              isDark ? 0.1 : 0.03),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
                     child: Row(
                       children: [
                         Container(
-                          width: 36,
-                          height: 36,
+                          width: 40,
+                          height: 40,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF59E0B)
+                            color: MCColors.signalOrange
                                 .withOpacity(isDark ? 0.12 : 0.08),
-                            borderRadius: BorderRadius.circular(10),
+                            shape: BoxShape.circle,
                           ),
                           child: Text(
                             '${(row.mcqAccuracy != null ? (row.mcqAccuracy! * 100).round() : '?')}%',
                             style: theme.textTheme.labelSmall?.copyWith(
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFFF59E0B),
+                              color: MCColors.signalOrange,
+                              fontSize: 11,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -614,7 +638,7 @@ class _WeakTopicsSection extends ConsumerWidget {
                                 Text(
                                   '${(row.dueRatio * 100).round()}% due',
                                   style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
+                                    color: MCColors.slateGray,
                                   ),
                                 ),
                             ],
@@ -623,7 +647,7 @@ class _WeakTopicsSection extends ConsumerWidget {
                         Icon(
                           Icons.auto_awesome_rounded,
                           size: 16,
-                          color: accent.deep.withOpacity(0.5),
+                          color: accent.deep.withOpacity(0.4),
                         ),
                       ],
                     ),
@@ -633,52 +657,6 @@ class _WeakTopicsSection extends ConsumerWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class AccentChip extends StatelessWidget {
-  const AccentChip({
-    required this.label,
-    required this.accent,
-    this.icon,
-    super.key,
-  });
-
-  final String label;
-  final IconData? icon;
-  final dynamic accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark
-            ? accent.deep.withOpacity(0.12)
-            : accent.soft.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(50),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 16, color: accent.deep),
-            const SizedBox(width: 6),
-          ],
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: isDark
-                  ? Colors.white.withOpacity(0.9)
-                  : accent.deep,
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

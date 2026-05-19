@@ -38,7 +38,7 @@ class AppSettings {
 
   static const initial = AppSettings(
     themeMode: ThemeMode.system,
-    accent: AppAccent.graphite,
+    accent: AppAccent.ink,
     locale: Locale('en'),
   );
 }

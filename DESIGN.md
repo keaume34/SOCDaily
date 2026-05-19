@@ -1,125 +1,125 @@
-# SOCDaily Design Language — "Cute Sentinel"
+# SOCDaily Design Language — Mastercard-Inspired
 
-> A SOC analyst is essentially a friendly night-shift detective: watchful, focused, slightly nerdy, but always on the user's side. The visual language should feel that way — calm and trustworthy first, then quietly playful in the corners.
+> A warm, editorial, sophisticated design system inspired by Mastercard's
+> visual identity. Cream canvases, extreme border-radius, atmospheric shadows,
+> and tight typography tracking create a premium yet approachable learning
+> companion.
 
-## 1. Audit of the current app (Phase 0–P12)
+## 1. Design Principles
 
-A full set of audit screenshots lives in [`/home/ubuntu/screenshots/p13a_audit/`](app/lib/src/theme/). The condensed reading:
+1. **Warm, never sterile.** Canvas Cream (#F3F0EE) replaces white everywhere.
+   Pure white is reserved for floating navigation or raised card surfaces.
+2. **Extreme radius scale.** Skip 8–16 px mid-range. Use 3–6 px (tiny),
+   20 px (buttons), 24 px (cards), 40 px (hero frames), 999 px (pills).
+3. **Atmospheric shadows.** Shadows are large-blur, low-opacity cushions
+   (48 px spread at 8 % opacity), never sharp directional edges.
+4. **One type family.** Sofia Sans (open-source match for MarkForMC) unifies
+   headlines, body, and labels. Weight 500 for headlines, 400 for body.
+5. **Tight tracking, generous spacing.** Headlines use −2 % letter-spacing,
+   eyebrows use +4 %. Section padding follows 8-based scale (48–128 px).
+6. **Ink Black is the hero.** #141413 for primary CTAs and headlines. Signal
+   Orange (#CF4500) only for consent/legal. Decorative orange (#F37338) for
+   orbital arcs and accents.
+7. **Circular > rectangular.** Icon containers are circles, not rounded rects.
+   Feature cards use pill-shaped arrow buttons instead of small chevrons.
+8. **Floating navigation.** Bottom nav is a white pill with 999 px radius,
+   atmospheric shadow, and expanding label on the active item.
 
-| Area | Today | Verdict |
-|---|---|---|
-| **Theme** | Material 3, `ColorScheme.fromSeed` on `AppAccent.deep` + monochrome surface (`#0B0F14` dark / `#FAFBFC` light) | Clean but flat. Reads as "internal admin tool" rather than "learning companion". |
-| **Typography** | `Typography.blackMountainView` / `whiteMountainView` (Roboto) with weight bumps | Fine for body, no personality in headings. |
-| **Cards** | 20-radius rounded rect, 0 elevation, 0.6α outline + 0.6α surfaceContainerHighest | Already soft, but every screen uses the same surface tone — no hierarchy. |
-| **Accents** | 6 enum values (`graphite`, `azure`, `violet`, `crimson`, `forest`, `amber`), each `deep` + `soft` | Solid pro palette. Missing any "warm" / "happy" tone. |
-| **Bottom nav** | Material `NavigationBar` with `indicatorColor: accent.deep × 0.18` | Works, but the active pill is barely visible (see Home screenshot). |
-| **Home** | List of 7 chevron rows (`Start a study session`, `Daily challenge`, …) + a `Welcome back / SOCDaily` heading + 3 stat chips | Functional, zero delight. No mascot, no illustration, no encouragement copy. |
-| **Study player** | Centered front/back text on a flat card; 4-state grading buttons (`Again / Hard / Good / Easy`) outlined in accent colors | Cards are huge empty rectangles → feels like a Notion doc, not flashcards. No flip animation polish. |
-| **Stats** | Streak ring + 3 KPI tiles + 90-day GitHub-style heatmap in pure black squares | Heatmap is too "GitHub" — needs softer pastel ramp matching the active accent. |
-| **Pomodoro** | Plain grey ring + `25:00` numeral, no controls visible by default | Ring is a flat outline — needs gradient stroke + breathing animation. |
-| **Daily challenge / Mock exam** | Same study player but with solid blue buttons | Inconsistent button style (vs. outlined in regular study). |
-| **Certificate** | Blue corner triangle on white sheet, big "SOC Analyst" headline | Already feels semi-formal; just needs better typography pairing. |
-| **Empty / first-run** | None — the app shows a fresh seed import immediately | Misses the chance to introduce the mascot. |
+## 2. Color Palette
 
-**One-line summary:** today the app looks like a *capable* learning database. We want it to look like a *companion that's rooting for you*.
-
-## 2. Design principles ("cute pro")
-
-1. **Calm first, cute second.** Cute touches sit on top of a calm, hierarchical layout — never replace it. If a designer would call something "loud", we don't ship it.
-2. **One mascot, sparing appearances.** The mascot shows up at meaningful moments (welcome, milestones, empty states, "Why was I wrong?" panels) — not on every card.
-3. **Two type voices.** One humanist sans-serif for body/UI (legibility), one rounded display for headlines & numerals (personality). Same colour, different shape.
-4. **Soft elevation, soft motion.** No hard drop shadows; we use 1–2 layered surface tones + a 1px border. Motion is short (120–220 ms) and uses `Curves.easeOutCubic`.
-5. **Accent ≠ chrome.** The user's accent colour is the highlight, not the background. Most surfaces stay neutral so the accent has somewhere to land.
-6. **Data screens stay data screens.** Cheatsheet tables, Mock exam timer, Certificate, and AI settings keep enterprise-grade restraint. No mascot there.
-7. **Dark mode is the same vibe, not "just inverted".** Same warmth in the borders and the accent halo.
-
-## 3. Color palette (proposed)
-
-Keep the 6 existing accents (`graphite`, `azure`, `violet`, `crimson`, `forest`, `amber`) — they're already balanced. Add **three pastel "soft" accents** for users who want a lighter, friendlier feel:
-
-| Token | Hex (`deep`) | Hex (`soft`) | Vibe |
+| Token | Light | Dark | Usage |
 |---|---|---|---|
-| `sakura` | `#DB2777` | `#FCE7F3` | Friendly pink, great for "Daily challenge". |
-| `mint` | `#0F766E` | `#CCFBF1` | Calming teal-mint, good default for studying. |
-| `mocha` | `#92400E` | `#FEF3C7` | Warm cocoa, fits Pomodoro and Cheatsheet. |
+| Canvas Cream | `#F3F0EE` | `#1A1917` | Body background |
+| Lifted Cream | `#FCFBFA` | `#222220` | Card surfaces, nested panels |
+| Ink Black | `#141413` | `#FCFBFA` | Primary text, headings, CTAs |
+| Charcoal | `#262627` | — | Secondary dark surfaces |
+| Slate Gray | `#696969` | `white 60%` | Secondary text |
+| Dust Taupe | `#D1CDC7` | — | Muted text, placeholders |
+| Signal Orange | `#CF4500` | — | Consent/legal actions only |
+| Light Signal Orange | `#F37338` | — | Decorative accents, orbitals |
+| Link Blue | `#3860BE` | — | In-text links, secondary icons |
+| Divider Cream | `#E8E2DA` | `white 8%` | Borders, dividers |
 
-Plus a new **support palette** used only inside widgets, not user-selectable:
+### Accent System
 
-- `success.50/500/700` — soft mint background, mid green text. Used in MCQ "Correct" banner.
-- `warning.50/500/700` — soft amber. Used in "Hard" rating and Pomodoro break.
-- `danger.50/500/700` — soft rose. Used in "Again" rating and "Why was I wrong?" tutor card.
+Users can pick a personal accent color. Three groups:
 
-## 4. Typography
+- **Mastercard:** Ink (default), Signal, Clay — warm editorial tones.
+- **Professional:** Graphite, Azure, Violet, Crimson, Forest, Amber.
+- **Friendly:** Sakura, Mint, Mocha — pastel soft variants.
 
-| Role | Family | Notes |
+Each accent has `.deep` (strong, for buttons and headings) and `.soft`
+(light tint, for backgrounds and indicators).
+
+## 3. Typography
+
+Single font family: **Sofia Sans** (weight-variable).
+
+| Role | Size | Weight | Tracking | Line-height |
+|---|---|---|---|---|
+| H1 (hero) | 64 px | 500 | −2 % | 1.0 |
+| H2 (section) | 36 px | 500 | −2 % | 1.22 |
+| H3 (card title) | 24 px | 500 | −2 % | 1.2 |
+| Body | 16 px | 400 | 0 | 1.4 |
+| Eyebrow | 12 px | 700 | +4 % | — |
+| Label | 11–14 px | 500–700 | +0.2–0.56 | — |
+
+## 4. Border Radius Scale
+
+| Size | Usage |
+|---|---|
+| 3–6 px | Heatmap cells, tiny indicators |
+| 20 px | Buttons, FABs, accent swatches, side rail items |
+| 24 px | Cards, option tiles, explanation panels |
+| 40 px | Hero frames, flashcards, dialogs, bottom sheets |
+| 999 px | Navigation pill, input fields, chips, tags, snackbar |
+
+## 5. Elevation / Shadows
+
+| Level | Shadow | Usage |
 |---|---|---|
-| Headlines / displays / numerals | **Quicksand** (rounded geometric sans) | Friendly, used for `Welcome back`, streak counts, exam scores, certificate name. |
-| Body / UI labels | **Plus Jakarta Sans** | Humanist sans, slightly playful but very legible at 14–16. |
-| Mono (cheatsheet, AI raw text) | Default `JetBrains Mono` via `google_fonts` | Already needed for code snippets in cards. |
+| 0 | None | 95 % of surfaces |
+| 1 (floating nav) | `rgba(0,0,0,0.04) 0 4px 24px` | Bottom nav pill |
+| 2 (cards/hero) | `rgba(0,0,0,0.08) 0 24px 48px` | Hero section, flashcards |
+| 3 (modals) | `rgba(0,0,0,0.25) 0 70px 110px` | Rare, for overlays |
 
-Loaded via `google_fonts` (caches at runtime; we can fall back to system if offline). The existing `_textTheme` builder gains a font family per text role.
+## 6. Components
 
-## 5. Shape & elevation
+- **Buttons:** Ink pill (20 px radius, Ink Black bg, Cream text). Outlined
+  pill variant for secondary actions.
+- **Cards:** Lifted Cream surface, 24 px radius, Level 1 shadow. Hero
+  cards use 40 px radius and Level 2 shadow.
+- **Feature cards:** Row layout with circular icon container, title/subtitle,
+  and circular arrow button on the right.
+- **Stat cards:** Vertical layout, eyebrow label in uppercase with wide
+  tracking, hero numeral, accent icon at top.
+- **Flashcards:** 40 px stadium radius, 3D flip animation, eyebrow dot +
+  label, atmospheric Level 2 shadow.
+- **MCQ options:** 24 px radius, pill badges for choice types, radio/check
+  icons with accent tint.
+- **Navigation:** Floating white pill bar (999 px radius) on mobile, cream
+  side rail on tablet/desktop.
+- **Section eyebrows:** Small accent dot (6 px circle) + uppercase label
+  with +4 % tracking.
+- **Tags / chips:** Full pill (999 px), Dust Taupe or accent-tinted surface.
 
-- **Card radius**: bump from `20` to `22`, but every nested item uses `16`. Two radii max per screen — readable hierarchy.
-- **Buttons**: `14 → 16` radius, add a subtle 1px inner highlight (white@8% top edge).
-- **Bottom nav**: indicator pill goes from `accent.deep@18%` → `accent.soft × 70%` plus a 1px accent.deep border so it actually reads as "selected".
-- **Shadows**: none on cards. Floating mascot speech bubble uses `BoxShadow(blurRadius:24, offset:(0,8), color:accent.deep@8%)` — that's the only place a real shadow exists.
+## 7. Motion
 
-## 6. Motion
+- Default duration: 200 ms for micro-interactions, 380 ms for flashcard flip.
+- Curve: `Curves.easeOutCubic` for most transitions.
+- Flashcard: 3D rotateY with perspective 0.001.
+- Nav items: animated width expansion on selection.
 
-- Card tap: 120 ms scale 1.0 → 0.97 → 1.0 (Curves.easeOutBack).
-- Page transitions: stick with `MaterialPage` but custom transition = 220 ms fade + 12px slide-up.
-- Pomodoro ring: stroke draws with `TweenAnimationBuilder` (no jank); pulses 1.0 → 1.02 every breath (4s) while focus is running.
-- Streak milestone (3 / 7 / 30 / 100 days): one-shot `confetti` burst centred on the streak chip + mascot peeks from the bottom of the screen for 2s with a thumbs-up.
-- MCQ correct: green check icon bounces in (Curves.elasticOut, 320 ms), banner fades in.
-- MCQ wrong: card shakes 6px once (180 ms), then "Why was I wrong?" button glows softly.
+## 8. Responsive Breakpoints
 
-## 7. Mascot — proposal
-
-I'd like to settle on the mascot before P13.B starts. Three directions, all share the same constraint: must read clearly at 24×24px (used in the home greeting) and at 256×256px (welcome / milestone screens). All would be vector SVG / Lottie, no rasters.
-
-### Option A — **Sentinel Owl** ("Otto")
-A small, round owl with oversized round glasses and a hoodie. Night-shift defender vibe. Reactions: 🦉 hooded squint when wrong, glasses-glare when correct, sleeping cap on Pomodoro break.
-
-> Strengths: matches "night shift", already used in cyber-mascot tradition (HTB-ish but cuter, less aggressive). Glasses imply analyst.
-> Risks: owl mascots are common in cyber, might feel derivative.
-
-### Option B — **Sherlock Magnifier** ("Loupe")
-A magnifying glass with a friendly face on the lens. The handle is shaped like a `?`. Reactions: zoomed-in pupils when investigating, sparkle when finding evidence, tea-cup on break.
-
-> Strengths: extremely on-brand for SOC ("detect, investigate, respond"). Reads great at 24×24. Original.
-> Risks: less universally "cute" than an animal; ironically more "cool" than warm.
-
-### Option C — **Shield Bunny** ("Buni")
-A pastel shield with bunny ears poking out the top. Friendly face on the shield surface. Reactions: ears droop when wrong, ears perked when right, helmet on for Mock exam.
-
-> Strengths: maximum cute, very approachable for a "Vietnamese L1/L2 learner" audience. Shield = defensive security.
-> Risks: might feel too kawaii for the certificate / mock exam screens (we'd hide it there).
-
-**My recommendation: Option B (Loupe).** It's the only one that *also* reads as professional in the certificate footer, and it gives us a built-in visual language for "Explain deeper" (zoom-in) and "Why was I wrong?" (looking at evidence).
-
-But anh chọn cuối cùng — em sẽ vẽ vector SVG cho lựa chọn của anh ở P13.C.
-
-## 8. Phase plan (`P13.A` → `P13.E`)
-
-Each sub-phase = own branch off `devin/1778578590-phase12-pdf-source-viewer`, own PR (stacked), one commit per phase (force-with-lease only if rebase needed), `memory_bank.md` updated at the end of each.
-
-| Phase | Scope | Acceptance |
+| Breakpoint | Width | Layout |
 |---|---|---|
-| **P13.A** (this PR) | Install Flutter SDK on VM, write `DESIGN.md` (this file), screenshot every screen, push to memory bank. No code changes to the app. | DESIGN.md committed; 20 screenshots saved (kept locally, not committed); user picks mascot + confirms pastel palette. |
-| **P13.B** | Theme refinements: add `google_fonts` (Quicksand + Plus Jakarta Sans), bump radii, add 3 pastel accents, fix nav-bar indicator, soft inner highlight on buttons. No widgets relocated. | `flutter analyze` clean; existing tests still 84/84; visual diff: bottom-nav active state clearly visible, headings render in Quicksand on Home/Stats. |
-| **P13.C** | Vector mascot (1 file `assets/mascot/<name>.svg` + 4 reaction variants) + empty-state widget + 3-step onboarding shown once on first launch. | New `Mascot` widget; `OnboardingScreen` route; mascot appears on Home greeting + empty Stats; new test: "Onboarding only shows on first launch". |
-| **P13.D** | Micro-interactions: `confetti` on streak milestones, scale-bounce on card taps, MCQ correct/wrong animations, Pomodoro ring breathing pulse. | Frame budget < 16 ms on Linux desktop; new test: "Streak controller emits milestone event at 7/30/100 days". |
-| **P13.E** | Screen polish: Home dashboard cards get icon tiles in accent.soft, Stats heatmap uses pastel ramp, Daily Challenge gets mascot summary, Certificate gets new font pair, Cheatsheet keeps current restraint. | Visual sweep: every screen screenshot before/after, attached to PR description. |
+| Mobile | < 600 px | Single column, floating pill nav |
+| Tablet | 600–767 px | Single column with wider padding |
+| Wide | ≥ 768 px | Side rail + content area |
 
-Total ETA: ~1 day of focused work per sub-phase. Each phase is independently mergeable — if anh muốn dừng sau P13.B (chỉ refresh theme), em dừng và phần sau đóng dạng follow-up.
+## 9. Legacy
 
-## 9. Risks & decisions to make before P13.B
-
-1. **Mascot choice** (A / B / C above) — em đề xuất B nhưng anh quyết.
-2. **Font CDN vs. bundled** — `google_fonts` mặc định download lúc runtime. Anh có muốn bundle Quicksand + Plus Jakarta Sans làm offline assets không? Em đề xuất bundle (APK lớn hơn ~600 KB nhưng app dùng được offline 100%).
-3. **Whether to keep the 6 pro accents or also surface the 3 pastel ones in Settings.** Em đề xuất giữ cả 9 và đặt 3 cái pastel ở 1 nhóm "Friendly" trong picker. Default vẫn `graphite`.
-4. **Onboarding length** — 3 steps là max em sẽ ship; ít hơn cũng được. Anh có muốn skip onboarding hoàn toàn (bypass = "Bắt đầu ngay" button) không?
-
-Khi anh chốt 1–4, em vào P13.B.
+The old Quicksand + PlusJakartaSans font pairing is still bundled in
+`pubspec.yaml` for backwards compatibility with the PDF certificate generator.
+The UI rendering exclusively uses Sofia Sans.

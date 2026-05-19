@@ -9,6 +9,7 @@ import '../../data/db/app_database.dart';
 import '../../data/db/content_repository.dart';
 import '../../data/seed/seed_bootstrap.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme/app_theme.dart';
 import '../../theme/gradient_background.dart';
 import '../../widgets/tap_bounce.dart';
 import '../settings/settings_controller.dart';
@@ -115,35 +116,33 @@ class _SubjectCard extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.06)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(22),
+              ? Colors.white.withOpacity(0.05)
+              : MCColors.liftedCream,
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: isDark
-                  ? Colors.black.withOpacity(0.15)
-                  : const Color(0xFFD4C9BE).withOpacity(0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(24),
             onTap: () => context.push('/browse/subject/${subject.id}'),
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Row(
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 48,
+                    height: 48,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: accent.deep.withOpacity(isDark ? 0.15 : 0.1),
-                      borderRadius: BorderRadius.circular(13),
+                      color: accent.deep.withOpacity(isDark ? 0.12 : 0.08),
+                      shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.library_books_rounded,
@@ -176,10 +175,22 @@ class _SubjectCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.06)
+                          : MCColors.canvasCream,
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 16,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.4)
+                          : MCColors.inkBlack,
+                    ),
                   ),
                 ],
               ),
@@ -244,23 +255,22 @@ class SubjectDetailScreen extends ConsumerWidget {
                           child: Container(
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? Colors.white.withOpacity(0.06)
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(22),
+                                  ? Colors.white.withOpacity(0.05)
+                                  : MCColors.liftedCream,
+                              borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: isDark
-                                      ? Colors.black.withOpacity(0.15)
-                                      : const Color(0xFFD4C9BE).withOpacity(0.2),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 3),
+                                  color: Colors.black.withOpacity(
+                                      isDark ? 0.12 : 0.04),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(22),
+                                borderRadius: BorderRadius.circular(24),
                                 onTap: () =>
                                     context.push('/browse/chapter/${c.id}'),
                                 child: Padding(
@@ -268,19 +278,18 @@ class SubjectDetailScreen extends ConsumerWidget {
                                   child: Row(
                                     children: [
                                       Container(
-                                        width: 44,
-                                        height: 44,
+                                        width: 48,
+                                        height: 48,
                                         alignment: Alignment.center,
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF8B5CF6)
+                                          color: MCColors.linkBlue
                                               .withOpacity(
-                                                  isDark ? 0.15 : 0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(13),
+                                                  isDark ? 0.12 : 0.08),
+                                          shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
                                           Icons.folder_rounded,
-                                          color: Color(0xFF8B5CF6),
+                                          color: MCColors.linkBlue,
                                           size: 22,
                                         ),
                                       ),
@@ -294,12 +303,22 @@ class SubjectDetailScreen extends ConsumerWidget {
                                           ),
                                         ),
                                       ),
-                                      Icon(
-                                        Icons.arrow_forward_ios_rounded,
-                                        size: 14,
-                                        color: theme.colorScheme
-                                            .onSurfaceVariant
-                                            .withOpacity(0.4),
+                                      Container(
+                                        width: 32,
+                                        height: 32,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.06)
+                                              : MCColors.canvasCream,
+                                        ),
+                                        child: Icon(
+                                          Icons.arrow_forward_rounded,
+                                          size: 16,
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.4)
+                                              : MCColors.inkBlack,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -387,23 +406,21 @@ class _TopicCard extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.06)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(22),
+              ? Colors.white.withOpacity(0.05)
+              : MCColors.liftedCream,
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: isDark
-                  ? Colors.black.withOpacity(0.15)
-                  : const Color(0xFFD4C9BE).withOpacity(0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(24),
             onTap: () => context.push('/study/topic/${topic.id}'),
             child: Padding(
               padding: const EdgeInsets.all(18),
@@ -413,17 +430,17 @@ class _TopicCard extends ConsumerWidget {
                   Row(
                     children: [
                       Container(
-                        width: 44,
-                        height: 44,
+                        width: 48,
+                        height: 48,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981)
-                              .withOpacity(isDark ? 0.15 : 0.1),
-                          borderRadius: BorderRadius.circular(13),
+                          color: const Color(0xFF047857)
+                              .withOpacity(isDark ? 0.12 : 0.08),
+                          shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.article_rounded,
-                          color: Color(0xFF10B981),
+                          color: Color(0xFF047857),
                           size: 22,
                         ),
                       ),
@@ -436,11 +453,22 @@ class _TopicCard extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 14,
-                        color: theme.colorScheme.onSurfaceVariant
-                            .withOpacity(0.4),
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isDark
+                              ? Colors.white.withOpacity(0.06)
+                              : MCColors.canvasCream,
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 16,
+                          color: isDark
+                              ? Colors.white.withOpacity(0.4)
+                              : MCColors.inkBlack,
+                        ),
                       ),
                     ],
                   ),

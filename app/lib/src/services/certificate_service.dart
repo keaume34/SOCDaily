@@ -2,9 +2,10 @@
 // current learning stats. The PDF is rendered server-side (in-app) using
 // the `pdf` package and previewed/shared via `printing`.
 //
-// P13.E: load the bundled Quicksand + PlusJakartaSans fonts so the PDF
-// matches the app's typography. Font load is async + cached on the
-// service instance so successive `buildPdf` calls don't re-read assets.
+// P13.E: load the bundled SofiaSans font so the PDF
+// matches the app's Mastercard-inspired typography. Font load is async +
+// cached on the service instance so successive `buildPdf` calls don't re-read
+// assets.
 
 import 'dart:typed_data';
 
@@ -38,9 +39,9 @@ class CertificateService {
     if (_displayFont != null && _bodyFont != null) return;
     try {
       final display = await rootBundle
-          .load('assets/fonts/Quicksand-VariableFont_wght.ttf');
+          .load('assets/fonts/SofiaSans-VariableFont_wght.ttf');
       final body = await rootBundle
-          .load('assets/fonts/PlusJakartaSans-VariableFont_wght.ttf');
+          .load('assets/fonts/SofiaSans-VariableFont_wght.ttf');
       _displayFont = pw.Font.ttf(display);
       _bodyFont = pw.Font.ttf(body);
     } catch (_) {

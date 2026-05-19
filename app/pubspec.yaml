@@ -71,6 +71,11 @@ flutter:
     - assets/seed/blue-team/phishing/
     - assets/mascot/
   fonts:
+    - family: SofiaSans
+      fonts:
+        - asset: assets/fonts/SofiaSans-VariableFont_wght.ttf
+        - asset: assets/fonts/SofiaSans-Italic-VariableFont_wght.ttf
+          style: italic
     - family: Quicksand
       fonts:
         - asset: assets/fonts/Quicksand-VariableFont_wght.ttf

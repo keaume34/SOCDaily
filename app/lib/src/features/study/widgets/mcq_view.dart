@@ -11,6 +11,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../data/db/app_database.dart';
+import '../../../theme/app_theme.dart';
 
 class McqView extends StatelessWidget {
   const McqView({
@@ -51,7 +52,7 @@ class McqView extends StatelessWidget {
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary
                     .withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.1 : 0.06),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 _isMultiple
@@ -72,7 +73,7 @@ class McqView extends StatelessWidget {
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white.withOpacity(0.06)
                     : Colors.black.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 question.difficulty,
@@ -108,14 +109,13 @@ class McqView extends StatelessWidget {
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white.withOpacity(0.06)
                     : Colors.white,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.black.withOpacity(0.15)
-                        : const Color(0xFFD4C9BE).withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withOpacity(
+                        Theme.of(context).brightness == Brightness.dark ? 0.12 : 0.04),
+                    blurRadius: 24,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -197,17 +197,17 @@ class _OptionTile extends StatelessWidget {
 
     final tile = InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: border.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -329,7 +329,7 @@ class _ResultBannerState extends State<_ResultBanner>
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: color.withOpacity(isDark ? 0.1 : 0.06),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Row(
           children: [

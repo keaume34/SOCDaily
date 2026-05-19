@@ -396,9 +396,9 @@ class _StatChip extends StatelessWidget {
           BoxShadow(
             color: isDark
                 ? Colors.black.withOpacity(0.15)
-                : const Color(0xFFD4C9BE).withOpacity(0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
+                : Colors.black.withOpacity(0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -456,14 +456,12 @@ class _Heatmap extends StatelessWidget {
         color: isDark
             ? Colors.white.withOpacity(0.06)
             : Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.15)
-                : const Color(0xFFD4C9BE).withOpacity(0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -586,9 +584,9 @@ class _EmptyStatsCard extends StatelessWidget {
           BoxShadow(
             color: isDark
                 ? Colors.black.withOpacity(0.15)
-                : const Color(0xFFD4C9BE).withOpacity(0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
+                : Colors.black.withOpacity(0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
           ),
         ],
       ),

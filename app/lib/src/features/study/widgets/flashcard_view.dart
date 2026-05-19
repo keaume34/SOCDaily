@@ -1,9 +1,10 @@
-// Flashcard widget: front/back with 3D flip animation, swipe-to-continue,
-// and improved glass-card styling.
+// Flashcard widget: front/back with 3D flip, Mastercard-style stadium cards.
 
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
+import '../../../theme/app_theme.dart';
 
 class FlashcardView extends StatefulWidget {
   const FlashcardView({
@@ -132,58 +133,52 @@ class _FlashcardFace extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final primary = theme.colorScheme.primary;
 
     final bg = isBack
-        ? (isDark
-            ? primary.withOpacity(0.08)
-            : primary.withOpacity(0.04))
-        : (isDark
-            ? Colors.white.withOpacity(0.04)
-            : Colors.white.withOpacity(0.8));
+        ? (isDark ? const Color(0xFF222220) : MCColors.liftedCream)
+        : (isDark ? const Color(0xFF1A1917) : Colors.white);
 
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 320),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.2)
-                : const Color(0xFFD4C9BE).withOpacity(0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(isDark ? 0.15 : 0.08),
+            blurRadius: 48,
+            offset: const Offset(0, 24),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Eyebrow
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                width: 6,
+                height: 6,
                 decoration: BoxDecoration(
                   color: isBack
-                      ? primary.withOpacity(isDark ? 0.12 : 0.08)
-                      : (isDark
-                          ? Colors.white.withOpacity(0.06)
-                          : Colors.black.withOpacity(0.04)),
-                  borderRadius: BorderRadius.circular(8),
+                      ? MCColors.lightSignalOrange
+                      : MCColors.slateGray,
+                  shape: BoxShape.circle,
                 ),
-                child: Text(
-                  label,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w600,
-                    color: isBack
-                        ? primary
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  letterSpacing: 0.56,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: isBack
+                      ? MCColors.lightSignalOrange
+                      : MCColors.slateGray,
                 ),
               ),
               const Spacer(),
@@ -191,19 +186,20 @@ class _FlashcardFace extends StatelessWidget {
                 Icon(
                   Icons.touch_app_rounded,
                   size: 18,
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                  color: MCColors.dustTaupe,
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Expanded(
             child: Center(
               child: SingleChildScrollView(
                 child: Text(
                   text,
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     height: 1.35,
+                    letterSpacing: -0.44,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -211,29 +207,29 @@ class _FlashcardFace extends StatelessWidget {
             ),
           ),
           if (hint != null && !isBack) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
+                horizontal: 16,
+                vertical: 10,
               ),
               decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withOpacity(isDark ? 0.1 : 0.06),
-                borderRadius: BorderRadius.circular(16),
+                color: MCColors.signalOrange.withOpacity(isDark ? 0.08 : 0.05),
+                borderRadius: BorderRadius.circular(999),
               ),
               child: Row(
                 children: [
                   const Icon(
                     Icons.lightbulb_rounded,
                     size: 16,
-                    color: Color(0xFFF59E0B),
+                    color: MCColors.signalOrange,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       hint!,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: MCColors.slateGray,
                       ),
                     ),
                   ),
@@ -242,7 +238,7 @@ class _FlashcardFace extends StatelessWidget {
             ),
           ],
           if (tags.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -250,19 +246,19 @@ class _FlashcardFace extends StatelessWidget {
                 for (final t in tags)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 12,
+                      vertical: 5,
                     ),
                     decoration: BoxDecoration(
                       color: isDark
                           ? Colors.white.withOpacity(0.06)
-                          : Colors.black.withOpacity(0.04),
-                      borderRadius: BorderRadius.circular(8),
+                          : MCColors.canvasCream,
+                      borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
                       '#$t',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: MCColors.slateGray,
                       ),
                     ),
                   ),

@@ -193,6 +193,21 @@ class _AccentPicker extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 12),
+            const _AccentGroupLabel(label: 'Mastercard'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (final accent in AppAccent.mastercard)
+                  _AccentSwatch(
+                    accent: accent,
+                    selected: accent == current,
+                    onTap: () => onChanged(accent),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
             const _AccentGroupLabel(label: 'Professional'),
             const SizedBox(height: 8),
             Wrap(
@@ -264,20 +279,20 @@ class _AccentSwatch extends StatelessWidget {
       button: true,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           width: 56,
           height: 56,
           decoration: BoxDecoration(
             gradient: accent.accentGradient(brightness),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: accent.deep.withOpacity(0.35),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+                      color: accent.deep.withOpacity(0.25),
+                      blurRadius: 24,
+                      offset: const Offset(0, 4),
                     ),
                   ]
                 : [],

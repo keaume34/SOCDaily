@@ -1,8 +1,10 @@
-// Responsive app scaffold: bottom nav on mobile, side rail on tablet/web.
-// "Soft Styles" — rounded, warm, shadow-based separation.
+// Responsive app scaffold: floating pill nav on mobile, side rail on tablet/web.
+// Mastercard-inspired: warm cream canvas, floating white nav pill, atmospheric shadows.
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../theme/app_theme.dart';
 
 class AppShellDestination {
   const AppShellDestination({
@@ -59,15 +61,62 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: _FloatingNavPill(
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: _onTap,
-        destinations: [
-          for (final d in destinations)
-            NavigationDestination(
-              icon: Icon(d.icon),
-              selectedIcon: Icon(d.selectedIcon),
-              label: d.label,
+        destinations: destinations,
+        onTap: _onTap,
+        isDark: isDark,
+      ),
+    );
+  }
+}
+
+// ── Floating pill nav bar (mobile) ──
+class _FloatingNavPill extends StatelessWidget {
+  const _FloatingNavPill({
+    required this.selectedIndex,
+    required this.destinations,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  final int selectedIndex;
+  final List<AppShellDestination> destinations;
+  final ValueChanged<int> onTap;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF222220).withOpacity(0.97)
+            : Colors.white.withOpacity(0.97),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          for (int i = 0; i < destinations.length; i++)
+            _NavPillItem(
+              icon: i == selectedIndex
+                  ? destinations[i].selectedIcon
+                  : destinations[i].icon,
+              label: destinations[i].label,
+              selected: i == selectedIndex,
+              onTap: () => onTap(i),
+              isDark: isDark,
+              theme: theme,
             ),
         ],
       ),
@@ -75,6 +124,70 @@ class AppShell extends StatelessWidget {
   }
 }
 
+class _NavPillItem extends StatelessWidget {
+  const _NavPillItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.isDark,
+    required this.theme,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final bool isDark;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected
+        ? theme.colorScheme.primary
+        : (isDark ? Colors.white.withOpacity(0.45) : MCColors.slateGray);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+          horizontal: selected ? 16 : 12,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? theme.colorScheme.primary.withOpacity(isDark ? 0.12 : 0.06)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22, color: color),
+            if (selected) ...[
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'SofiaSans',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                  letterSpacing: -0.26,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Side rail (tablet/desktop) ──
 class _SideRail extends StatelessWidget {
   const _SideRail({
     required this.selectedIndex,
@@ -95,17 +208,16 @@ class _SideRail extends StatelessWidget {
       width: 80,
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF1A1A2E)
-            : const Color(0xFFFAF8F5),
-        boxShadow: [
-          BoxShadow(
+            ? const Color(0xFF1A1917)
+            : MCColors.canvasCream,
+        border: Border(
+          right: BorderSide(
             color: isDark
-                ? Colors.black.withOpacity(0.15)
-                : const Color(0xFFD4C9BE).withOpacity(0.15),
-            blurRadius: 12,
-            offset: const Offset(2, 0),
+                ? Colors.white.withOpacity(0.06)
+                : MCColors.dividerCream,
+            width: 1,
           ),
-        ],
+        ),
       ),
       child: Column(
         children: [
@@ -114,17 +226,18 @@ class _SideRail extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(16),
+              color: MCColors.inkBlack,
+              borderRadius: BorderRadius.circular(20),
             ),
-            child: Center(
+            child: const Center(
               child: Text(
                 'S',
                 style: TextStyle(
-                  fontFamily: 'Quicksand',
-                  color: theme.colorScheme.primary,
+                  fontFamily: 'SofiaSans',
+                  color: MCColors.canvasCream,
                   fontSize: 22,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.44,
                 ),
               ),
             ),
@@ -168,11 +281,11 @@ class _RailItem extends StatelessWidget {
     final theme = Theme.of(context);
     final color = selected
         ? theme.colorScheme.primary
-        : theme.colorScheme.onSurfaceVariant.withOpacity(0.5);
+        : (isDark ? Colors.white.withOpacity(0.45) : MCColors.slateGray);
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
@@ -180,9 +293,9 @@ class _RailItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: selected
-              ? theme.colorScheme.primary.withOpacity(isDark ? 0.10 : 0.07)
+              ? theme.colorScheme.primary.withOpacity(isDark ? 0.10 : 0.06)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -192,7 +305,7 @@ class _RailItem extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'PlusJakartaSans',
+                fontFamily: 'SofiaSans',
                 fontSize: 10,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 color: color,
