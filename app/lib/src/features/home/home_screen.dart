@@ -1,6 +1,8 @@
 // Home screen: Mastercard-inspired dashboard with hero greeting, stat chips,
 // feature grid, and weak-areas section.
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -221,7 +223,6 @@ class _StatsRow extends StatelessWidget {
             icon: Icons.local_fire_department_rounded,
             label: 'STREAK',
             value: '0',
-            color: MCColors.signalOrange,
             isDark: isDark,
           ),
         ),
@@ -231,7 +232,6 @@ class _StatsRow extends StatelessWidget {
             icon: Icons.timelapse_rounded,
             label: 'DUE TODAY',
             value: '$dueCount',
-            color: isDark ? MCColors.dustTaupe : accent.deep as Color,
             isDark: isDark,
           ),
         ),
@@ -241,7 +241,6 @@ class _StatsRow extends StatelessWidget {
             icon: Icons.auto_awesome_rounded,
             label: 'NEW',
             value: '$newCount',
-            color: MCColors.linkBlue,
             isDark: isDark,
           ),
         ),
@@ -255,72 +254,77 @@ class _MiniStatCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
-    required this.color,
     required this.isDark,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  final Color color;
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.07)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : color.withValues(alpha: 0.12),
-        ),
-        boxShadow: [
-          BoxShadow(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
             color: isDark
-                ? Colors.black.withValues(alpha: 0.2)
-                : color.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: isDark ? 0.15 : 0.10),
-              shape: BoxShape.circle,
+                ? Colors.white.withValues(alpha: 0.07)
+                : Colors.white.withValues(alpha: 0.75),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.06),
             ),
-            child: Icon(icon, size: 18, color: color),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+                blurRadius: 32,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : MCColors.inkBlack,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 18,
+                  color: isDark ? Colors.white.withValues(alpha: 0.7) : MCColors.slateGray),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                value,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : MCColors.inkBlack,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: isDark ? Colors.white.withValues(alpha: 0.45) : MCColors.slateGray,
+                  letterSpacing: 0.56,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 10,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: isDark ? Colors.white.withValues(alpha: 0.5) : MCColors.slateGray,
-              letterSpacing: 0.56,
-              fontWeight: FontWeight.w700,
-              fontSize: 10,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -367,7 +371,6 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.school_rounded,
         title: l10n.homeStartSession,
         subtitle: l10n.homeStartSessionSubtitle,
-        accentColor: MCColors.inkBlack,
         isDark: isDark,
         onTap: () => context.push('/study/today'),
       ),
@@ -375,15 +378,13 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.bolt_rounded,
         title: l10n.homeDailyChallenge,
         subtitle: l10n.homeDailyChallengeSubtitle,
-        accentColor: MCColors.signalOrange,
         isDark: isDark,
         onTap: () => context.push('/daily'),
       ),
       _FeatureCard(
         icon: Icons.timer_rounded,
         title: 'Mock exam',
-        subtitle: 'Timed random MCQs — practice under pressure.',
-        accentColor: MCColors.lightSignalOrange,
+        subtitle: 'Timed random MCQs \u2014 practice under pressure.',
         isDark: isDark,
         onTap: () => context.push('/quiz'),
       ),
@@ -391,7 +392,6 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.table_chart_rounded,
         title: 'Cheatsheet',
         subtitle: 'Table view of all flashcards by subject.',
-        accentColor: const Color(0xFF047857),
         isDark: isDark,
         onTap: () => context.push('/cheatsheet'),
       ),
@@ -399,7 +399,6 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.av_timer_rounded,
         title: 'Pomodoro',
         subtitle: 'Focus / break cycles while you study.',
-        accentColor: MCColors.linkBlue,
         isDark: isDark,
         onTap: () => context.push('/pomodoro'),
       ),
@@ -407,7 +406,6 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.workspace_premium_rounded,
         title: 'Certificate',
         subtitle: 'Generate a printable study certificate.',
-        accentColor: MCColors.charcoal,
         isDark: isDark,
         onTap: () => context.push('/certificate'),
       ),
@@ -415,7 +413,6 @@ class _FeatureGrid extends StatelessWidget {
         icon: Icons.menu_book_rounded,
         title: l10n.homeBrowse,
         subtitle: l10n.homeBrowseSubtitle,
-        accentColor: MCColors.inkBlack,
         isDark: isDark,
         onTap: () => context.go('/browse'),
       ),
@@ -428,7 +425,6 @@ class _FeatureCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.accentColor,
     required this.isDark,
     this.onTap,
   });
@@ -436,112 +432,111 @@ class _FeatureCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final Color accentColor;
   final bool isDark;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // For very dark accent colors, use a lighter variant in dark mode
-    final effectiveColor = isDark && _isVeryDark(accentColor)
-        ? MCColors.dustTaupe
-        : accentColor;
     return TapBounce(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    effectiveColor.withValues(alpha: 0.15),
-                    effectiveColor.withValues(alpha: 0.05),
-                  ]
-                : [
-                    Colors.white,
-                    accentColor.withValues(alpha: 0.04),
-                  ],
-          ),
-          border: Border.all(
-            color: isDark
-                ? effectiveColor.withValues(alpha: 0.2)
-                : accentColor.withValues(alpha: 0.12),
-          ),
-          boxShadow: [
-            BoxShadow(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            decoration: BoxDecoration(
               color: isDark
-                  ? Colors.black.withValues(alpha: 0.2)
-                  : accentColor.withValues(alpha: 0.08),
-              blurRadius: 24,
-              offset: const Offset(0, 6),
+                  ? Colors.white.withValues(alpha: 0.07)
+                  : Colors.white.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.06),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+                  blurRadius: 32,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(24),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: effectiveColor.withValues(alpha: isDark ? 0.2 : 0.10),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, color: isDark ? effectiveColor : accentColor, size: 26),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          title,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                            color: isDark ? Colors.white : MCColors.inkBlack,
-                          ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(24),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.55)
-                                : MCColors.slateGray,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        child: Icon(icon,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.8)
+                              : MCColors.inkBlack,
+                          size: 28),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              title,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: isDark ? Colors.white : MCColors.inkBlack,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              subtitle,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.5)
+                                    : MCColors.slateGray,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.black.withValues(alpha: 0.04),
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 18,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.5)
+                              : MCColors.slateGray,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: effectiveColor.withValues(alpha: isDark ? 0.15 : 0.08),
-                    ),
-                    child: Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 18,
-                      color: isDark ? effectiveColor : accentColor,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -549,9 +544,6 @@ class _FeatureCard extends StatelessWidget {
       ),
     );
   }
-
-  static bool _isVeryDark(Color c) =>
-      c.red < 50 && c.green < 50 && c.blue < 50;
 }
 
 class _WeakTopicsSection extends ConsumerWidget {
