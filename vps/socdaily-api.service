@@ -1,0 +1,50 @@
+# systemd unit for the SOCDaily content generator API.
+# Drop into /etc/systemd/system/socdaily-api.service and:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now socdaily-api
+#
+# Environment lives in /etc/socdaily/api.env (mode 0600, owner ubuntu):
+#   SOCDAILY_API_TOKENS=token1,token2
+#   SOCDAILY_PDF_DIR=/var/www/socdaily-pdfs
+#   SOCDAILY_LLM_PROVIDER=openai
+#   SOCDAILY_LLM_BASE_URL=https://api.openai.com/v1
+#   SOCDAILY_LLM_API_KEY=sk-...
+#   SOCDAILY_LLM_MODEL=gpt-4o-mini
+#   SOCDAILY_CONTENT_LANG=vi
+#
+# The unit binds to 127.0.0.1 only — public traffic must go through nginx
+# (vps/nginx/socdaily-api.conf) which terminates TLS and rate-limits.
+
+[Unit]
+Description=SOCDaily content generator API (FastAPI/uvicorn)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/SOCDaily
+EnvironmentFile=/etc/socdaily/api.env
+# uv-managed venv; adjust if you use plain `python -m venv .venv`.
+ExecStart=/home/ubuntu/SOCDaily/.venv/bin/uvicorn socdaily.api.app:app \
+    --host 127.0.0.1 --port 8000 --workers 2 --no-access-log
+Restart=on-failure
+RestartSec=3s
+
+# Hardening — read-only root, no privileges, no /tmp leakage.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/www/socdaily-pdfs /home/ubuntu/SOCDaily
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictRealtime=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

@@ -142,8 +142,26 @@ SOCDaily/
 └── tests/
 ```
 
+## Study app
+
+The study UI lives in [`app/`](./app) as a Flutter project (Android, iOS,
+desktop, web from one codebase). The admin web lives in `admin/` once it lands
+in P10. See [`memory_bank.md`](./memory_bank.md) for phase progress and
+[`ARCHITECTURE.md`](./ARCHITECTURE.md) for the overall design.
+
+### Quick start (app)
+
+```bash
+cd app
+flutter pub get
+flutter run -d chrome       # or any connected device
+flutter analyze
+flutter test
+```
+
 ## Status
 
-This is a **scaffolding release**. It builds the DB from PDFs; the study UI
-(web / mobile / desktop) is the next milestone — schema and JSON contracts are
-stable enough for the app to consume directly.
+This repository is being built in phases. The Python pipeline (this folder)
+ingests PDFs into SQLite-ready JSON; the Flutter app under `app/` consumes
+those JSON seeds (and later, a Supabase-backed content source) to deliver an
+offline-first SOC learning experience.

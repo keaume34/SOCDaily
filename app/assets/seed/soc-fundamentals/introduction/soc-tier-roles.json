@@ -1,0 +1,103 @@
+{
+  "subject_code": "soc-fundamentals",
+  "subject_title": "SOC Fundamentals",
+  "chapter_code": "introduction",
+  "chapter_title": "Introduction to a SOC",
+  "topic_code": "soc-tier-roles",
+  "topic_title": "SOC Tier Roles (L1 / L2 / L3)",
+  "topic_summary": "Responsibilities, escalation flow, and skill expectations for each SOC tier.",
+  "source_pdf": "soc-tier-roles.pdf",
+  "flashcards": [
+    {
+      "front": "What is the primary responsibility of an L1 SOC Analyst?",
+      "back": "Monitor SIEM alerts, perform initial triage (close noise, escalate true positives), and document findings.",
+      "difficulty": "easy",
+      "tags": ["soc", "tier", "l1"],
+      "source_page": 5
+    },
+    {
+      "front": "Which SOC tier typically owns deep incident investigation and forensics?",
+      "back": "L2 — they take escalations from L1, perform host/network forensics, and coordinate containment.",
+      "difficulty": "easy",
+      "tags": ["soc", "tier", "l2"],
+      "source_page": 6
+    },
+    {
+      "front": "Name two non-shift activities an L3 SOC Analyst owns.",
+      "back": "Threat hunting and detection engineering (writing/tuning rules, building playbooks).",
+      "difficulty": "medium",
+      "tags": ["soc", "tier", "l3", "hunting"],
+      "source_page": 7
+    },
+    {
+      "front": "Define \"escalation\" in the SOC tier model.",
+      "back": "Passing an alert or incident from a lower tier to a higher tier after triage confirms the lower tier cannot fully resolve it.",
+      "difficulty": "easy",
+      "tags": ["process", "escalation"],
+      "source_page": 8
+    },
+    {
+      "front": "Why is documentation important for an L1 analyst?",
+      "back": "It creates an audit trail, helps L2/L3 pick up context fast, and feeds detection-tuning feedback loops.",
+      "difficulty": "medium",
+      "tags": ["soc", "process"],
+      "source_page": 9
+    }
+  ],
+  "questions": [
+    {
+      "qtype": "single",
+      "stem": "Which tier should typically close a known false-positive alert without escalation?",
+      "options": [
+        {"label": "A", "content": "L1 — triage and close, log the rationale", "is_correct": true},
+        {"label": "B", "content": "L2 — only L2 may close alerts", "is_correct": false},
+        {"label": "C", "content": "L3 — they own all alert closure", "is_correct": false},
+        {"label": "D", "content": "No tier — alerts are closed automatically", "is_correct": false}
+      ],
+      "explanation": "L1's core role is alert triage; closing a confirmed false positive with documentation is exactly the L1 workflow.",
+      "difficulty": "easy",
+      "tags": ["soc", "tier", "l1"],
+      "source_page": 5
+    },
+    {
+      "qtype": "single",
+      "stem": "An L1 analyst sees beaconing traffic to an unknown external IP from a finance workstation. What is the correct next step?",
+      "options": [
+        {"label": "A", "content": "Mark the alert as informational and close it", "is_correct": false},
+        {"label": "B", "content": "Triage briefly (enrich + verify), then escalate to L2 for deeper investigation", "is_correct": true},
+        {"label": "C", "content": "Block the IP at the firewall and move on", "is_correct": false},
+        {"label": "D", "content": "Wait for the user to report a problem first", "is_correct": false}
+      ],
+      "explanation": "Beaconing to an unknown destination from a sensitive workstation is a credible incident indicator — L1 enriches and escalates rather than closing or unilaterally acting.",
+      "difficulty": "medium",
+      "tags": ["soc", "tier", "escalation"],
+      "source_page": 6
+    },
+    {
+      "qtype": "multiple",
+      "stem": "Which of the following are typical L3 responsibilities? (Select all that apply.)",
+      "options": [
+        {"label": "A", "content": "Threat hunting", "is_correct": true},
+        {"label": "B", "content": "Detection engineering", "is_correct": true},
+        {"label": "C", "content": "Routine alert triage", "is_correct": false},
+        {"label": "D", "content": "Tooling integration and playbook authoring", "is_correct": true}
+      ],
+      "explanation": "L3 focuses on proactive work (hunting, detection, tooling). Routine triage is L1.",
+      "difficulty": "medium",
+      "tags": ["soc", "tier", "l3"],
+      "source_page": 7
+    },
+    {
+      "qtype": "truefalse",
+      "stem": "True or false: every SOC alert must be escalated to L2 before being closed.",
+      "options": [
+        {"label": "A", "content": "True", "is_correct": false},
+        {"label": "B", "content": "False", "is_correct": true}
+      ],
+      "explanation": "Confirmed false positives and routine informational alerts are closed at L1 — escalation is reserved for alerts L1 cannot conclusively resolve.",
+      "difficulty": "easy",
+      "tags": ["process", "escalation"],
+      "source_page": 8
+    }
+  ]
+}

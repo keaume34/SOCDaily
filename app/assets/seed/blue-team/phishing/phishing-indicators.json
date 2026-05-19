@@ -1,0 +1,77 @@
+{
+  "subject_code": "blue-team",
+  "subject_title": "Blue Team Operations",
+  "chapter_code": "phishing",
+  "chapter_title": "Phishing Triage",
+  "topic_code": "phishing-indicators",
+  "topic_title": "Phishing Indicators a SOC L1 Must Recognize",
+  "topic_summary": "Quick-pivot indicators that turn 'just another email' into an actionable incident.",
+  "source_pdf": "phishing-indicators.pdf",
+  "flashcards": [
+    {
+      "front": "Name three high-signal envelope indicators in a phishing email.",
+      "back": "1) Sender domain ≠ reply-to / mailfrom, 2) SPF/DKIM/DMARC failure, 3) Recently registered or look-alike sender domain.",
+      "difficulty": "medium",
+      "tags": ["phishing", "email"],
+      "source_page": 3
+    },
+    {
+      "front": "What is a 'consent phishing' attack?",
+      "back": "Tricking a user into granting an OAuth app excessive scopes (e.g., Mail.Read on Microsoft 365); no password is stolen but the attacker keeps access until the consent is revoked.",
+      "difficulty": "hard",
+      "tags": ["phishing", "oauth"],
+      "source_page": 7
+    },
+    {
+      "front": "Why does opening a phishing URL in an isolated browser help triage?",
+      "back": "It detonates payloads, captures redirects, and shows the final landing page without exposing the analyst's identity or the corporate browser session.",
+      "difficulty": "medium",
+      "tags": ["phishing", "triage", "tools"],
+      "source_page": 9
+    }
+  ],
+  "questions": [
+    {
+      "qtype": "single",
+      "stem": "Which SPF/DKIM/DMARC outcome is most suspicious on a high-priority email?",
+      "options": [
+        {"label": "A", "content": "All three pass", "is_correct": false},
+        {"label": "B", "content": "DKIM passes, SPF passes, DMARC fails (alignment mismatch)", "is_correct": true},
+        {"label": "C", "content": "DMARC is not configured by sender", "is_correct": false},
+        {"label": "D", "content": "DKIM signature missing because of mailing-list rewrite", "is_correct": false}
+      ],
+      "explanation": "Alignment failure (passing protocols but failing DMARC alignment) is a strong spoofing indicator. Missing DMARC config and list-rewrite cases happen on legitimate mail too.",
+      "difficulty": "hard",
+      "tags": ["phishing", "email-auth"],
+      "source_page": 4
+    },
+    {
+      "qtype": "single",
+      "stem": "A user reports they 'accepted some permission popup' from a Microsoft login screen and now spam is being sent from their account. The most likely root cause is…",
+      "options": [
+        {"label": "A", "content": "Credential theft — change password", "is_correct": false},
+        {"label": "B", "content": "Consent phishing — revoke the malicious OAuth app", "is_correct": true},
+        {"label": "C", "content": "DNS hijack", "is_correct": false},
+        {"label": "D", "content": "Local malware on the workstation", "is_correct": false}
+      ],
+      "explanation": "Consent phishing leaves credentials untouched but grants the attacker token-level access until the application consent is revoked in the tenant.",
+      "difficulty": "hard",
+      "tags": ["phishing", "oauth"],
+      "source_page": 7
+    },
+    {
+      "qtype": "multiple",
+      "stem": "Select two safer ways for an L1 analyst to inspect a suspicious phishing URL.",
+      "options": [
+        {"label": "A", "content": "Open it in an isolated browser / browser-in-a-box service", "is_correct": true},
+        {"label": "B", "content": "Submit it to a URL sandbox (e.g., urlscan.io)", "is_correct": true},
+        {"label": "C", "content": "Click it from the corporate workstation", "is_correct": false},
+        {"label": "D", "content": "Forward it to the executive team for review", "is_correct": false}
+      ],
+      "explanation": "Isolated browsers and URL sandboxes let you detonate safely. Clicking from corp or fanning out to execs both increase blast radius.",
+      "difficulty": "medium",
+      "tags": ["phishing", "triage"],
+      "source_page": 9
+    }
+  ]
+}

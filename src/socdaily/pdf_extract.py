@@ -25,7 +25,10 @@ PAGE_MARK = "<!-- page={n} -->"
 
 
 def _have_pdftotext() -> bool:
-    return shutil.which("pdftotext") is not None
+    # We use both pdftotext (extract) and pdfinfo (page count). On some
+    # Windows installs (e.g. Git for Windows mingw64) only pdftotext is
+    # bundled, so require both before opting into the poppler path.
+    return shutil.which("pdftotext") is not None and shutil.which("pdfinfo") is not None
 
 
 def _extract_with_pdftotext(pdf: Path) -> list[str]:

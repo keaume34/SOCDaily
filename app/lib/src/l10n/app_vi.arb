@@ -1,0 +1,34 @@
+{
+  "@@locale": "vi",
+  "appName": "SOCDaily",
+
+  "navHome": "Trang chính",
+  "navBrowse": "Duyệt",
+  "navStudy": "Học",
+  "navStats": "Thống kê",
+  "navSettings": "Cài đặt",
+
+  "homeGreeting": "Chào mừng quay lại",
+  "homeStreak": "Chuỗi {count} ngày",
+  "homeDueToday": "{count} thẻ cần ôn hôm nay",
+  "homeStartSession": "Bắt đầu phiên học",
+  "homeStartSessionSubtitle": "Những thẻ được lên lịch cho hôm nay.",
+  "homeDailyChallenge": "Thử thách hằng ngày",
+  "homeDailyChallengeSubtitle": "Một bộ mới mỗi ngày, ai cũng nhận cùng đề.",
+  "homeBrowse": "Xem tất cả tài liệu",
+  "homeBrowseSubtitle": "Chọn bất kỳ Subject, Chapter hoặc Topic.",
+
+  "placeholderComingSoon": "Sẽ có trong các phase tiếp theo.",
+
+  "settingsAppearance": "Giao diện",
+  "settingsLanguage": "Ngôn ngữ",
+  "settingsAbout": "Giới thiệu",
+  "settingsThemeLight": "Sáng",
+  "settingsThemeDark": "Tối",
+  "settingsThemeSystem": "Theo hệ thống",
+  "settingsAccent": "Màu nhấn",
+  "settingsAccentSubtitle": "Kết hợp với nền trắng/đen để giữ cảm giác chuyên nghiệp.",
+  "settingsLanguageSystem": "Theo hệ thống",
+  "settingsAboutTagline": "Xây dựng kho học SOC từ PDF của riêng anh, sau đó học như Anki nhưng đầy đủ hơn.",
+  "settingsAboutVersion": "Phiên bản {version}"
+}
