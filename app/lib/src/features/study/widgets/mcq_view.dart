@@ -11,7 +11,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../data/db/app_database.dart';
-import '../../../theme/app_theme.dart';
 
 class McqView extends StatelessWidget {
   const McqView({
@@ -203,6 +202,7 @@ class _OptionTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: border, width: 1.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
