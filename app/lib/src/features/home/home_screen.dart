@@ -231,7 +231,7 @@ class _StatsRow extends StatelessWidget {
             icon: Icons.timelapse_rounded,
             label: 'DUE TODAY',
             value: '$dueCount',
-            color: accent.deep as Color,
+            color: isDark ? MCColors.dustTaupe : accent.deep as Color,
             isDark: isDark,
           ),
         ),
@@ -443,6 +443,10 @@ class _FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // For very dark accent colors, use a lighter variant in dark mode
+    final effectiveColor = isDark && _isVeryDark(accentColor)
+        ? MCColors.dustTaupe
+        : accentColor;
     return TapBounce(
       onTap: onTap,
       child: Container(
@@ -453,8 +457,8 @@ class _FeatureCard extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: isDark
                 ? [
-                    accentColor.withValues(alpha: 0.15),
-                    accentColor.withValues(alpha: 0.05),
+                    effectiveColor.withValues(alpha: 0.15),
+                    effectiveColor.withValues(alpha: 0.05),
                   ]
                 : [
                     Colors.white,
@@ -463,7 +467,7 @@ class _FeatureCard extends StatelessWidget {
           ),
           border: Border.all(
             color: isDark
-                ? accentColor.withValues(alpha: 0.2)
+                ? effectiveColor.withValues(alpha: 0.2)
                 : accentColor.withValues(alpha: 0.12),
           ),
           boxShadow: [
@@ -490,10 +494,10 @@ class _FeatureCard extends StatelessWidget {
                     height: 52,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: isDark ? 0.2 : 0.10),
+                      color: effectiveColor.withValues(alpha: isDark ? 0.2 : 0.10),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(icon, color: accentColor, size: 26),
+                    child: Icon(icon, color: isDark ? effectiveColor : accentColor, size: 26),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -529,12 +533,12 @@ class _FeatureCard extends StatelessWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: accentColor.withValues(alpha: isDark ? 0.15 : 0.08),
+                      color: effectiveColor.withValues(alpha: isDark ? 0.15 : 0.08),
                     ),
                     child: Icon(
                       Icons.arrow_forward_rounded,
                       size: 18,
-                      color: accentColor,
+                      color: isDark ? effectiveColor : accentColor,
                     ),
                   ),
                 ],
@@ -545,6 +549,9 @@ class _FeatureCard extends StatelessWidget {
       ),
     );
   }
+
+  static bool _isVeryDark(Color c) =>
+      c.red < 50 && c.green < 50 && c.blue < 50;
 }
 
 class _WeakTopicsSection extends ConsumerWidget {
