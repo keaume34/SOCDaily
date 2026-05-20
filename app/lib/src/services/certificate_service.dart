@@ -38,12 +38,12 @@ class CertificateService {
   Future<void> _ensureFonts() async {
     if (_displayFont != null && _bodyFont != null) return;
     try {
-      final display = await rootBundle
+      // Load the font asset once — both display and body use the same file.
+      final fontData = await rootBundle
           .load('assets/fonts/SofiaSans-VariableFont_wght.ttf');
-      final body = await rootBundle
-          .load('assets/fonts/SofiaSans-VariableFont_wght.ttf');
-      _displayFont = pw.Font.ttf(display);
-      _bodyFont = pw.Font.ttf(body);
+      final font = pw.Font.ttf(fontData);
+      _displayFont = font;
+      _bodyFont = font;
     } catch (_) {
       // Tests / builds without the bundled fonts fall back to Helvetica.
       _displayFont = null;

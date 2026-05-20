@@ -97,7 +97,8 @@ class ContentRepository {
   }
 
   /// Deterministic daily picks: same set on every device for a given UTC
-  /// calendar date. Returns `(flashcards, questions)`.
+  /// calendar date. Loads only IDs for the shuffle, then fetches full rows
+  /// for the picked subset.
   Future<({List<Flashcard> flashcards, List<Question> questions})>
       dailyChallenge({
     DateTime? day,
@@ -106,11 +107,39 @@ class ContentRepository {
   }) async {
     final d = day ?? DateTime.now().toUtc();
     final seed = d.year * 10000 + d.month * 100 + d.day;
-    final allF = await allFlashcards();
-    final allQ = await allQuestions();
+
+    // Load only IDs (not full rows) — much cheaper for large datasets.
+    final idsFuture = Future.wait([
+      (_db.selectOnly(_db.flashcards)..addColumns([_db.flashcards.id]))
+          .get()
+          .then((r) => r.map((row) => row.read(_db.flashcards.id)!).toList()),
+      (_db.selectOnly(_db.questions)..addColumns([_db.questions.id]))
+          .get()
+          .then((r) => r.map((row) => row.read(_db.questions.id)!).toList()),
+    ]);
+    final allIds = await idsFuture;
+    final fIds = allIds[0];
+    final qIds = allIds[1];
+
+    final pickedFIds = _deterministicPick(fIds, flashcardCount, seed);
+    final pickedQIds = _deterministicPick(qIds, questionCount, seed + 1);
+
+    // Fetch full rows only for the selected IDs.
+    final results = await Future.wait([
+      pickedFIds.isEmpty
+          ? Future.value(<Flashcard>[])
+          : (_db.select(_db.flashcards)
+                ..where((f) => f.id.isIn(pickedFIds)))
+              .get(),
+      pickedQIds.isEmpty
+          ? Future.value(<Question>[])
+          : (_db.select(_db.questions)
+                ..where((q) => q.id.isIn(pickedQIds)))
+              .get(),
+    ]);
     return (
-      flashcards: _deterministicPick(allF, flashcardCount, seed),
-      questions: _deterministicPick(allQ, questionCount, seed + 1),
+      flashcards: results[0] as List<Flashcard>,
+      questions: results[1] as List<Question>,
     );
   }
 
@@ -129,11 +158,30 @@ class ContentRepository {
     return [for (var k = 0; k < take; k++) items[indices[k]]];
   }
 
+  /// Random N questions for timed quiz. Uses SQL-level random ordering
+  /// to avoid loading the entire table.
   Future<List<Question>> randomQuestions(int count, {int? seed}) async {
-    final all = await allQuestions();
-    if (all.isEmpty) return const [];
-    final actualSeed = seed ?? DateTime.now().millisecondsSinceEpoch;
-    return _deterministicPick(all, count, actualSeed);
+    if (seed != null) {
+      // Deterministic path for tests / reproducible runs.
+      final allIds = await (_db.selectOnly(_db.questions)
+            ..addColumns([_db.questions.id]))
+          .get()
+          .then((r) => r.map((row) => row.read(_db.questions.id)!).toList());
+      if (allIds.isEmpty) return const [];
+      final pickedIds = _deterministicPick(allIds, count, seed);
+      return (_db.select(_db.questions)
+            ..where((q) => q.id.isIn(pickedIds)))
+          .get();
+    }
+    // Non-deterministic: let SQLite pick random rows directly.
+    final rows = await _db.customSelect(
+      'SELECT * FROM questions ORDER BY RANDOM() LIMIT ?',
+      variables: [Variable.withInt(count)],
+      readsFrom: {_db.questions},
+    ).get();
+    return rows
+        .map((r) => _db.questions.map(r.data))
+        .toList();
   }
 
   Future<List<({Topic topic, List<Flashcard> flashcards})>>

@@ -98,18 +98,51 @@ class WeaknessScorer {
     final chapters = {for (final c in taxonomy[1] as List<Chapter>) c.id: c};
     final subjects = {for (final s in taxonomy[2] as List<Subject>) s.id: s};
 
-    // Aggregate MCQ stats per topic via SQL GROUP BY.
-    final mcqAgg = _db.selectOnly(_db.questions).join([
+    // Fire all three aggregate queries in parallel — they're independent.
+    final mcqFuture = (_db.selectOnly(_db.questions).join([
       innerJoin(_db.userQuestionState,
           _db.userQuestionState.questionId.equalsExp(_db.questions.id)),
     ])
-      ..addColumns([
-        _db.questions.topicId,
-        _db.userQuestionState.attempts.sum(),
-        _db.userQuestionState.correct.sum(),
-      ])
-      ..groupBy([_db.questions.topicId]);
-    final mcqRows = await mcqAgg.get();
+          ..addColumns([
+            _db.questions.topicId,
+            _db.userQuestionState.attempts.sum(),
+            _db.userQuestionState.correct.sum(),
+          ])
+          ..groupBy([_db.questions.topicId]))
+        .get();
+
+    final cardFuture = (_db.selectOnly(_db.flashcards).join([
+      leftOuterJoin(_db.userCardState,
+          _db.userCardState.flashcardId.equalsExp(_db.flashcards.id)),
+    ])
+          ..addColumns([
+            _db.flashcards.topicId,
+            _db.flashcards.id.count(),
+            _db.userCardState.flashcardId.count(),
+            _db.userCardState.ease.sum(),
+          ])
+          ..groupBy([_db.flashcards.topicId]))
+        .get();
+
+    final dueFuture = (_db.selectOnly(_db.flashcards).join([
+      leftOuterJoin(_db.userCardState,
+          _db.userCardState.flashcardId.equalsExp(_db.flashcards.id)),
+    ])
+          ..addColumns([
+            _db.flashcards.topicId,
+            _db.flashcards.id.count(),
+          ])
+          ..where(_db.userCardState.flashcardId.isNotNull() &
+              (_db.userCardState.nextReview.isNull() |
+                  _db.userCardState.nextReview.isSmallerOrEqualValue(now)))
+          ..groupBy([_db.flashcards.topicId]))
+        .get();
+
+    final aggResults = await Future.wait([mcqFuture, cardFuture, dueFuture]);
+    final mcqRows = aggResults[0];
+    final cardRows = aggResults[1];
+    final dueRows = aggResults[2];
+
     final mcqByTopic = <int, ({int attempts, int correct})>{};
     for (final r in mcqRows) {
       final tid = r.read(_db.questions.topicId)!;
@@ -118,20 +151,6 @@ class WeaknessScorer {
         correct: r.read(_db.userQuestionState.correct.sum()) ?? 0,
       );
     }
-
-    // Aggregate flashcard stats per topic via SQL GROUP BY.
-    final cardAgg = _db.selectOnly(_db.flashcards).join([
-      leftOuterJoin(_db.userCardState,
-          _db.userCardState.flashcardId.equalsExp(_db.flashcards.id)),
-    ])
-      ..addColumns([
-        _db.flashcards.topicId,
-        _db.flashcards.id.count(),
-        _db.userCardState.flashcardId.count(),
-        _db.userCardState.ease.sum(),
-      ])
-      ..groupBy([_db.flashcards.topicId]);
-    final cardRows = await cardAgg.get();
 
     final cardStatsByTopic = <int, ({int total, int reviewed, double easeSum})>{};
     for (final r in cardRows) {
@@ -143,20 +162,6 @@ class WeaknessScorer {
       );
     }
 
-    // Count due cards per topic (cards with nextReview <= now or never reviewed).
-    final dueAgg = _db.selectOnly(_db.flashcards).join([
-      leftOuterJoin(_db.userCardState,
-          _db.userCardState.flashcardId.equalsExp(_db.flashcards.id)),
-    ])
-      ..addColumns([
-        _db.flashcards.topicId,
-        _db.flashcards.id.count(),
-      ])
-      ..where(_db.userCardState.flashcardId.isNotNull() &
-          (_db.userCardState.nextReview.isNull() |
-              _db.userCardState.nextReview.isSmallerOrEqualValue(now)))
-      ..groupBy([_db.flashcards.topicId]);
-    final dueRows = await dueAgg.get();
     final dueByTopic = <int, int>{};
     for (final r in dueRows) {
       dueByTopic[r.read(_db.flashcards.topicId)!] =

@@ -214,6 +214,25 @@ LazyDatabase _openConnection() {
         db.execute('PRAGMA cache_size=-10000');
         // Enable foreign keys.
         db.execute('PRAGMA foreign_keys=ON');
+        // Temp store in memory for faster sorting/grouping.
+        db.execute('PRAGMA temp_store=MEMORY');
+        // ── Indexes for frequently-filtered columns ──
+        db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_flashcards_topic ON flashcards(topic_id)');
+        db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_questions_topic ON questions(topic_id)');
+        db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_question_options_question ON question_options(question_id)');
+        db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_chapters_subject ON chapters(subject_id)');
+        db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_topics_chapter ON topics(chapter_id)');
+        db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_user_card_state_next_review ON user_card_state(next_review)');
+        db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_user_streak_day ON user_streak(day)');
+        db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_user_bookmarks_kind ON user_bookmarks(item_kind, item_id)');
       },
     );
   });

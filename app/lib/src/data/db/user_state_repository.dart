@@ -135,19 +135,16 @@ class UserStateRepository {
     DateTime? now,
   }) async {
     final day = _dayBucket(now ?? DateTime.now());
-    final prev = await (_db.select(_db.userStreak)
-          ..where((s) => s.day.equals(day)))
-        .getSingleOrNull();
-    await _db.into(_db.userStreak).insert(
-          UserStreakCompanion.insert(
-            day: day,
-            cardsReviewed:
-                Value((prev?.cardsReviewed ?? 0) + cards),
-            questionsAnswered:
-                Value((prev?.questionsAnswered ?? 0) + questions),
-          ),
-          mode: InsertMode.insertOrReplace,
-        );
+    // Single SQL upsert with increment — avoids the SELECT+INSERT round-trip.
+    final dayMs = day.millisecondsSinceEpoch ~/ 1000;
+    await _db.customStatement(
+      'INSERT INTO user_streak (day, cards_reviewed, questions_answered) '
+      'VALUES (?, ?, ?) '
+      'ON CONFLICT(day) DO UPDATE SET '
+      'cards_reviewed = cards_reviewed + excluded.cards_reviewed, '
+      'questions_answered = questions_answered + excluded.questions_answered',
+      [dayMs, cards, questions],
+    );
   }
 
   /// Streak milestones that should trigger a celebration.

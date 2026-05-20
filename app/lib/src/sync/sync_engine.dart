@@ -40,9 +40,20 @@ class SyncEngine {
     required String code,
     required String deviceId,
   }) async {
+    // Fire all four data queries in parallel.
+    final futures = await Future.wait([
+      _db.select(_db.userCardState).get(),
+      _db.select(_db.userQuestionState).get(),
+      _db.select(_db.userBookmarks).get(),
+      _weaknessScorer.allScores(),
+    ]);
+    final cards = futures[0] as List<UserCardStateData>;
+    final questions = futures[1] as List<UserQuestionStateData>;
+    final bookmarks = futures[2] as List<UserBookmark>;
+    final weakness = futures[3] as List<WeaknessEntry>;
+
     final envs = <SyncEnvelope>[];
 
-    final cards = await _db.select(_db.userCardState).get();
     for (final c in cards) {
       envs.add(
         SyncEnvelope(
@@ -62,7 +73,6 @@ class SyncEngine {
       );
     }
 
-    final questions = await _db.select(_db.userQuestionState).get();
     for (final q in questions) {
       envs.add(
         SyncEnvelope(
@@ -81,7 +91,6 @@ class SyncEngine {
       );
     }
 
-    final bookmarks = await _db.select(_db.userBookmarks).get();
     for (final b in bookmarks) {
       envs.add(
         SyncEnvelope(
@@ -99,11 +108,6 @@ class SyncEngine {
       );
     }
 
-    // Topic-weakness scores are derived state but cheap to push and let
-    // the partner device skip a re-compute. We snapshot _all_ scored
-    // topics (not just the top-N) so the receiving device can fold them
-    // into its own ranking later.
-    final weakness = await _weaknessScorer.allScores();
     final now = DateTime.now().toUtc();
     for (final w in weakness) {
       envs.add(
@@ -241,9 +245,14 @@ class SyncEngine {
       myDeviceId: myDeviceId,
       since: since,
     );
+    // Wrap all applies in a single transaction to reduce WAL overhead.
     var applied = 0;
-    for (final env in remote) {
-      if (await applyEnvelope(env)) applied++;
+    if (remote.isNotEmpty) {
+      await _db.transaction(() async {
+        for (final env in remote) {
+          if (await applyEnvelope(env)) applied++;
+        }
+      });
     }
     return SyncRoundResult(
       uploaded: local.length,
