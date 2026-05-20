@@ -24,18 +24,26 @@ class TodayReviewScreen extends ConsumerStatefulWidget {
 class _TodayReviewScreenState extends ConsumerState<TodayReviewScreen> {
   int _index = 0;
   final Map<int, CardRating> _ratings = {};
+  bool _dirty = false;
+
+  void _invalidateIfDirty() {
+    if (_dirty) {
+      ref.invalidate(dueCountsProvider);
+      ref.invalidate(dueFlashcardsProvider);
+      _dirty = false;
+    }
+  }
 
   Future<void> _onRate(Flashcard card, CardRating rating) async {
     await ref
         .read(userStateRepositoryProvider)
         .recordFlashcardRating(card.id, rating);
     if (!mounted) return;
+    _dirty = true;
     setState(() {
       _ratings[card.id] = rating;
       _index += 1;
     });
-    ref.invalidate(dueCountsProvider);
-    ref.invalidate(dueFlashcardsProvider);
   }
 
   @override
@@ -57,6 +65,7 @@ class _TodayReviewScreenState extends ConsumerState<TodayReviewScreen> {
                 return _EmptyState();
               }
               if (_index >= cards.length) {
+                _invalidateIfDirty();
                 return _AllCaughtUp(
                   total: cards.length,
                   good: _ratings.values
@@ -74,7 +83,10 @@ class _TodayReviewScreenState extends ConsumerState<TodayReviewScreen> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.close),
-                          onPressed: () => context.pop(),
+                          onPressed: () {
+                            _invalidateIfDirty();
+                            context.pop();
+                          },
                         ),
                         const Spacer(),
                         Text(

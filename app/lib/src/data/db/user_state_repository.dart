@@ -43,7 +43,8 @@ class UserStateRepository {
     return update;
   }
 
-  /// Upsert MCQ attempt: increments `attempts` and `correct` (if right).
+  /// Upsert MCQ attempt: single SQL upsert with increment — avoids
+  /// the SELECT+INSERT round-trip.
   Future<void> recordQuestionAttempt(
     int questionId, {
     required bool wasCorrect,
@@ -51,22 +52,20 @@ class UserStateRepository {
     DateTime? now,
   }) async {
     final t = now ?? DateTime.now();
-    final prev = await (_db.select(_db.userQuestionState)
-          ..where((q) => q.questionId.equals(questionId)))
-        .getSingleOrNull();
-    final attempts = (prev?.attempts ?? 0) + 1;
-    final correct = (prev?.correct ?? 0) + (wasCorrect ? 1 : 0);
-    await _db.into(_db.userQuestionState).insert(
-          UserQuestionStateCompanion.insert(
-            questionId: Value(questionId),
-            attempts: Value(attempts),
-            correct: Value(correct),
-            lastAttempt: Value(t),
-            lastChoice: Value(choice),
-            updatedAt: Value(t),
-          ),
-          mode: InsertMode.insertOrReplace,
-        );
+    final tMs = t.millisecondsSinceEpoch ~/ 1000;
+    final correctInc = wasCorrect ? 1 : 0;
+    await _db.customStatement(
+      'INSERT INTO user_question_state '
+      '(question_id, attempts, correct, last_attempt, last_choice, updated_at) '
+      'VALUES (?, 1, ?, ?, ?, ?) '
+      'ON CONFLICT(question_id) DO UPDATE SET '
+      'attempts = attempts + 1, '
+      'correct = correct + ?, '
+      'last_attempt = ?, '
+      'last_choice = ?, '
+      'updated_at = ?',
+      [questionId, correctInc, tMs, choice, tMs, correctInc, tMs, choice, tMs],
+    );
     await recordActivity(questions: 1, now: t);
   }
 
@@ -260,14 +259,12 @@ class UserStateRepository {
   }
 
   Future<bool> toggleBookmark(String kind, int id, {DateTime? now}) async {
-    final exists = await isBookmarked(kind, id);
-    if (exists) {
-      await (_db.delete(_db.userBookmarks)
-            ..where((b) =>
-                b.itemKind.equals(kind) & b.itemId.equals(id)))
-          .go();
-      return false;
-    }
+    // Try to delete first; if affected == 0 the bookmark didn't exist → insert.
+    final deleted = await (_db.delete(_db.userBookmarks)
+          ..where((b) =>
+              b.itemKind.equals(kind) & b.itemId.equals(id)))
+        .go();
+    if (deleted > 0) return false;
     await _db.into(_db.userBookmarks).insert(
           UserBookmarksCompanion.insert(
             itemKind: kind,

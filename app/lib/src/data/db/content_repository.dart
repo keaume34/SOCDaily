@@ -186,27 +186,34 @@ class ContentRepository {
 
   Future<List<({Topic topic, List<Flashcard> flashcards})>>
       cheatsheetForSubject(int subjectId) async {
-    // Single join query: chapters → topics → flashcards for this subject.
     final chapterIds = await (_db.select(_db.chapters)
           ..where((c) => c.subjectId.equals(subjectId)))
         .get()
         .then((list) => list.map((c) => c.id).toList());
     if (chapterIds.isEmpty) return const [];
 
-    final topics = await (_db.select(_db.topics)
-          ..where((t) => t.chapterId.isIn(chapterIds))
-          ..orderBy([
-            (t) => OrderingTerm(expression: t.orderIndex),
-            (t) => OrderingTerm(expression: t.title),
-          ]))
-        .get();
+    // Load topics and flashcards in parallel — both filter by chapter IDs.
+    final results = await Future.wait([
+      (_db.select(_db.topics)
+            ..where((t) => t.chapterId.isIn(chapterIds))
+            ..orderBy([
+              (t) => OrderingTerm(expression: t.orderIndex),
+              (t) => OrderingTerm(expression: t.title),
+            ]))
+          .get(),
+      (_db.select(_db.flashcards).join([
+        innerJoin(_db.topics,
+            _db.topics.id.equalsExp(_db.flashcards.topicId)),
+      ])
+            ..where(_db.topics.chapterId.isIn(chapterIds))
+            ..orderBy([OrderingTerm(expression: _db.flashcards.id)]))
+          .get()
+          .then((rows) =>
+              rows.map((r) => r.readTable(_db.flashcards)).toList()),
+    ]);
+    final topics = results[0] as List<Topic>;
+    final allCards = results[1] as List<Flashcard>;
     if (topics.isEmpty) return const [];
-
-    final topicIds = topics.map((t) => t.id).toList();
-    final allCards = await (_db.select(_db.flashcards)
-          ..where((f) => f.topicId.isIn(topicIds))
-          ..orderBy([(f) => OrderingTerm(expression: f.id)]))
-        .get();
 
     final cardsByTopic = <int, List<Flashcard>>{};
     for (final c in allCards) {
@@ -221,19 +228,28 @@ class ContentRepository {
   }
 
   Future<ContentCounts> globalCounts() async {
-    final results = await Future.wait([
-      _db.subjects.count().getSingle(),
-      _db.chapters.count().getSingle(),
-      _db.topics.count().getSingle(),
-      _db.flashcards.count().getSingle(),
-      _db.questions.count().getSingle(),
-    ]);
+    // Single SQL query with subqueries — one round-trip instead of five.
+    final row = await _db.customSelect(
+      'SELECT '
+      '(SELECT COUNT(*) FROM subjects) AS s, '
+      '(SELECT COUNT(*) FROM chapters) AS c, '
+      '(SELECT COUNT(*) FROM topics) AS t, '
+      '(SELECT COUNT(*) FROM flashcards) AS f, '
+      '(SELECT COUNT(*) FROM questions) AS q',
+      readsFrom: {
+        _db.subjects,
+        _db.chapters,
+        _db.topics,
+        _db.flashcards,
+        _db.questions,
+      },
+    ).getSingle();
     return ContentCounts(
-      subjects: results[0],
-      chapters: results[1],
-      topics: results[2],
-      flashcards: results[3],
-      questions: results[4],
+      subjects: row.read<int>('s'),
+      chapters: row.read<int>('c'),
+      topics: row.read<int>('t'),
+      flashcards: row.read<int>('f'),
+      questions: row.read<int>('q'),
     );
   }
 }

@@ -1,6 +1,8 @@
 // Full-text search across flashcards + questions (LIKE-based for MVP;
 // upgrade to FTS5 once seed volume passes ~5k items).
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,9 +22,11 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _controller = TextEditingController();
   String _query = '';
+  Timer? _debounce;
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -73,7 +77,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             borderSide: BorderSide.none,
                           ),
                         ),
-                        onChanged: (v) => setState(() => _query = v),
+                        onChanged: (v) {
+                          _debounce?.cancel();
+                          _debounce = Timer(
+                            const Duration(milliseconds: 300),
+                            () => setState(() => _query = v),
+                          );
+                        },
                       ),
                     ),
                   ],

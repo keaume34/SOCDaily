@@ -107,8 +107,13 @@ class StudySessionController
     final topicId = arg;
     _repo = ref.watch(contentRepositoryProvider);
     _userRepo = ref.watch(userStateRepositoryProvider);
-    final cards = await _repo.listFlashcardsForTopic(topicId);
-    final questions = await _repo.listQuestionsForTopic(topicId);
+    // Load cards and questions in parallel — they're independent.
+    final results = await Future.wait([
+      _repo.listFlashcardsForTopic(topicId),
+      _repo.listQuestionsForTopic(topicId),
+    ]);
+    final cards = results[0] as List<Flashcard>;
+    final questions = results[1] as List<Question>;
     final optionsMap = await _repo.listOptionsForQuestions(
         questions.map((q) => q.id).toList());
     final items = <StudyItem>[
